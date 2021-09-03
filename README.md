@@ -10,6 +10,7 @@ From Phidgets' website:
 
 Brushless DC Motor Phidget
 ID: DCC1100_0
+
 https://www.phidgets.com/?tier=3&catid=64&pcid=57&prodid=1013
 
 Reuben Brewer, Ph.D.
