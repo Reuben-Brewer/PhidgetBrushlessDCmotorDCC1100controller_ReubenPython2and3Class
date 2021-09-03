@@ -9,6 +9,7 @@ From Phidgets' website:
 "The DCC1100 requires an 8-30V DC power supply and can control one brushless DC motor. The motor must have hall-effect feedback for this controller to function. The DCC1100 has a 5-pin Molex connector to interface with the motor's hall-effect output. This Phidget connects to your computer through a VINT Hub."
 
 Brushless DC Motor Phidget
+
 ID: DCC1100_0
 
 https://www.phidgets.com/?tier=3&catid=64&pcid=57&prodid=1013
