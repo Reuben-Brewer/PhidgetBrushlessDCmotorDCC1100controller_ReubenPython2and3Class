@@ -23,9 +23,13 @@ Apache 2 License
 Software Revision D, 11/12/2021
 
 Verified working on: 
+
 Python 2.7, 3.8
+
 Windows 8.1, 10 64-bit
+
 Raspberry Pi Buster 
+
 (no Mac testing yet)
 
 *NOTE THAT YOU MUST INSTALL BOTH THE Phidget22 LIBRARY AS WELL AS THE PYTHON MODULE.*
