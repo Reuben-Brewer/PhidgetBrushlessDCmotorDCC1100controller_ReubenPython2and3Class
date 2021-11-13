@@ -6,9 +6,9 @@ reuben.brewer@gmail.com,
 www.reubotics.com
 
 Apache 2 License
-Software Revision C, 09/03/2021
+Software Revision D, 11/12/2021
 
-Verified working on: Python 2.7 and 3 for Windows 8.1 64-bit and Raspberry Pi Buster (no Mac testing yet).
+Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit and Raspberry Pi Buster (no Mac testing yet).
 '''
 
 __author__ = 'reuben.brewer'
@@ -196,11 +196,11 @@ if __name__ == '__main__':
     global USE_BLDC_FLAG
     USE_BLDC_FLAG = 1
 
-    global USE_SINUSOIDAL_POS_CONTROL_INPUT_FLAG
-    USE_SINUSOIDAL_POS_CONTROL_INPUT_FLAG = 0
+    global USE_BLDC_POSITION_CONTROL_FLAG
+    USE_BLDC_POSITION_CONTROL_FLAG = 1 #SET TO 0 FOR VELOCITY CONTROL
 
-    global USE_SINUSOIDAL_VEL_CONTROL_INPUT_FLAG
-    USE_SINUSOIDAL_VEL_CONTROL_INPUT_FLAG = 0
+    global USE_BLDC_SINUSOIDAL_INPUT_FLAG
+    USE_BLDC_SINUSOIDAL_INPUT_FLAG = 1
 
     global USE_MYPRINT_FLAG
     USE_MYPRINT_FLAG = 1
@@ -278,11 +278,17 @@ if __name__ == '__main__':
     global SINUSOIDAL_MOTION_INPUT_ROMtestTimeToPeakAngle
     SINUSOIDAL_MOTION_INPUT_ROMtestTimeToPeakAngle = 2.0
 
-    global SINUSOIDAL_MOTION_INPUT_MinValue
-    SINUSOIDAL_MOTION_INPUT_MinValue = -50
+    global SINUSOIDAL_MOTION_INPUT_MinValue_PositionControl
+    SINUSOIDAL_MOTION_INPUT_MinValue_PositionControl = -50.0
 
-    global SINUSOIDAL_MOTION_INPUT_MaxValue
-    SINUSOIDAL_MOTION_INPUT_MaxValue = 50
+    global SINUSOIDAL_MOTION_INPUT_MaxValue_PositionControl
+    SINUSOIDAL_MOTION_INPUT_MaxValue_PositionControl = 50.0
+    
+    global SINUSOIDAL_MOTION_INPUT_MinValue_VelocityControl
+    SINUSOIDAL_MOTION_INPUT_MinValue_VelocityControl = -1.0
+
+    global SINUSOIDAL_MOTION_INPUT_MaxValue_VelocityControl
+    SINUSOIDAL_MOTION_INPUT_MaxValue_VelocityControl = 1.0
     #################################################
     #################################################
 
@@ -301,12 +307,7 @@ if __name__ == '__main__':
 
     #################################################
     #################################################
-    NumberOfBLDCmotorPoles = 4
-    GearRatio = 1.0
-    DistanceMMtoOutputShaftRevRatio = 72.0
-
     #PositionInRev = PositionInPhidgetsUnits*(1.0/(NumberOfBLDCmotorPoles * 3.0)) * (1.0/GearRatio)
-    #PositionInMM = PositionInRev*DistanceMMtoOutputShaftRevRatio
 
     global BLDC_MostRecentDict
 
@@ -331,9 +332,7 @@ if __name__ == '__main__':
     global BLDC_MostRecentDict_Time
     BLDC_MostRecentDict_Time = -11111
 
-    PositionInMM_last = -11111
-    BLDC_MostRecentDict_Time_Last = -11111
-
+    #################################################
     BLDC_GUIparametersDict = dict([("USE_GUI_FLAG", USE_GUI_FLAG and SHOW_IN_GUI_BLDC_FLAG),
                                     ("root", root),
                                     ("EnableInternal_MyPrint_Flag", 1),
@@ -345,41 +344,75 @@ if __name__ == '__main__':
                                     ("GUI_PADY", GUI_PADY_BLDC),
                                     ("GUI_ROWSPAN", GUI_ROWSPAN_BLDC),
                                     ("GUI_COLUMNSPAN", GUI_COLUMNSPAN_BLDC)])
+    #################################################
 
-    global BLDC_setup_dict
-    BLDC_setup_dict = dict([("GUIparametersDict", BLDC_GUIparametersDict),
+    #################################################
+    global BLDC_setup_dict_PositionControl
+    BLDC_setup_dict_PositionControl = dict([("GUIparametersDict", BLDC_GUIparametersDict),
                             ("UsePhidgetsLoggingInternalToThisClassObjectFlag", 1),
                             ("WaitForAttached_TimeoutDuration_Milliseconds", 5000),
                             ("user_set_name", "Reuben's Test BLDC Controller"),
-                            ("VINT_SerialNumber", 627656), #528938
-                            ("VINT_PortNumber", 0),
-                            ("DeviceChannel", 0),
-                            ("DeviceID", 108),
+                            ("VINT_DesiredSerialNumber", 627656), #CHANGE THIS TO MATCH YOUR UNIQUE VINT
+                            ("VINT_DesiredPortNumber", 0), #CHANGE THIS TO MATCH YOUR UNIQUE VINT
+                            ("DesiredDeviceID", 108),
                             ("NameToDisplay_UserSet", "Reuben's Test BLDC Controller"),
                             ("ENABLE_GETS_MAINTHREAD", 1),
                             ("FailsafeTime_Milliseconds", 10000),
                             ("MainThread_TimeToSleepEachLoop", 0.001),
-                            ("ControlMode", "position"),  #position or velocity
+                            ("ControlMode", "position"),  #position or velocity, AFTER SWITCHING ControlMode, YOU SOMETIMES NEED TO RUN PYTHON FILE ONCE AND THEN POWER-CYCLE BOARD FOR EFFECT TO TAKE
                             ("VelocityMinLimit_PhidgetsUnits_UserSet", 0.0),
-                            ("VelocityMaxLimit_PhidgetsUnits_UserSet", 10000.0), #700.0/(DistanceMMtoOutputShaftRevRatio*(1.0/(NumberOfBLDCmotorPoles * 3.0)) * (1.0/GearRatio))
+                            ("VelocityMaxLimit_PhidgetsUnits_UserSet", 10000.0),
                             ("VelocityStallLimit_PhidgetsUnits_UserSet", 15.0),  #Setting StallVelocity to 0 will turn off stall protection functionality
                             ("BrakingStrengthLimit_VelControl_Percent_UserSet", 100.0),
                             ("AccelerationMaxLimit_PhidgetsUnits_UserSet", 100000.0),
-                            ("PositionMinLimit_PhidgetsUnits_UserSet", -950.0/(DistanceMMtoOutputShaftRevRatio*(1.0/(NumberOfBLDCmotorPoles * 3.0)) * (1.0/GearRatio))),
+                            ("PositionMinLimit_PhidgetsUnits_UserSet", -1000.0),
                             ("PositionMaxLimit_PhidgetsUnits_UserSet", 1000.0),
-                            ("Kp_PosControl_Gain_UserSet", 20000.0),  #MUST BE NEGATIVE (-20000.0) FOR TOILET-SCOOTER-HUB-MOTOR, POSITIVE FOR PHIDGETS-BRAND MOTOR
-                            ("Ki_PosControl_Gain_UserSet", 2.0),  #MUST BE NEGATIVE (-2.0) FOR TOILET-SCOOTER-HUB-MOTOR, POSITIVE FOR PHIDGETS-BRAND MOTOR
-                            ("Kd_PosControl_Gain_UserSet", 40000.0),  #MUST BE NEGATIVE (-40000.0) FOR TOILET-SCOOTER-HUB-MOTOR, POSITIVE FOR PHIDGETS-BRAND MOTOR
+                            ("Kp_PosControl_Gain_UserSet", 20000.0),  #IF MOTOR-CONTROL FAILS, THEN TRY ALL-NEGATIVE-GAIN-VALUES (Kp, Ki, and KD)!
+                            ("Ki_PosControl_Gain_UserSet", 2.0),  #IF MOTOR-CONTROL FAILS, THEN TRY ALL-NEGATIVE-GAIN-VALUES (Kp, Ki, and KD)!
+                            ("Kd_PosControl_Gain_UserSet", 40000.0),  #IF MOTOR-CONTROL FAILS, THEN TRY ALL-NEGATIVE-GAIN-VALUES (Kp, Ki, and KD)!
                             ("DeadBand_PosControl_PhidgetsUnits_UserSet", 10.0),  #Lower DeadBand value is a tighter Position loop (allows less error)
-                            ("RescaleFactor_MultipliesPhidgetsUnits_UserSet", 1.0)])  #1.0/(4.25) #1.0/138.0 for ToiletScooter to command revolutions instead of commutations
-    '''
-    ("UpdateDeltaT_ms", 100), #100 min for velocity, 20 min for position
-    ("StartingActualAngle_Deg", 0.0),
-    '''
+                            ("RescaleFactor_MultipliesPhidgetsUnits_UserSet", 1.0),
+                            ("UpdateDeltaT_ms", 20)]) #100 min for velocity, 20 min for position
+    #################################################
+
+    #################################################
+    global BLDC_setup_dict_VelocityControl
+    BLDC_setup_dict_VelocityControl = dict([("GUIparametersDict", BLDC_GUIparametersDict),
+                            ("UsePhidgetsLoggingInternalToThisClassObjectFlag", 1),
+                            ("WaitForAttached_TimeoutDuration_Milliseconds", 5000),
+                            ("user_set_name", "Reuben's Test BLDC Controller"),
+                            ("VINT_DesiredSerialNumber", 627656), #CHANGE THIS TO MATCH YOUR UNIQUE VINT
+                            ("VINT_DesiredPortNumber", 0), #CHANGE THIS TO MATCH YOUR UNIQUE VINT
+                            ("DesiredDeviceID", 108),
+                            ("NameToDisplay_UserSet", "Reuben's Test BLDC Controller"),
+                            ("ENABLE_GETS_MAINTHREAD", 1),
+                            ("FailsafeTime_Milliseconds", 10000),
+                            ("MainThread_TimeToSleepEachLoop", 0.001),
+                            ("ControlMode", "velocity"),  #position or velocity, AFTER SWITCHING ControlMode, MUST RUN PYTHON FILE ONCE AND THEN POWER-CYCLE BOARD FOR EFFECT TO TAKE
+                            ("VelocityMinLimit_PhidgetsUnits_UserSet", -1.0),
+                            ("VelocityMaxLimit_PhidgetsUnits_UserSet", 1.0),
+                            ("VelocityStallLimit_PhidgetsUnits_UserSet", 15.0),  #Setting StallVelocity to 0 will turn off stall protection functionality
+                            ("BrakingStrengthLimit_VelControl_Percent_UserSet", 100.0),
+                            ("AccelerationMaxLimit_PhidgetsUnits_UserSet", 100.0),
+                            ("PositionMinLimit_PhidgetsUnits_UserSet", -1000.0),
+                            ("PositionMaxLimit_PhidgetsUnits_UserSet", 1000.0),
+                            ("Kp_PosControl_Gain_UserSet", 20000.0),  #IF MOTOR-CONTROL FAILS, THEN TRY ALL-NEGATIVE-GAIN-VALUES (Kp, Ki, and KD)!
+                            ("Ki_PosControl_Gain_UserSet", 2.0),  #IF MOTOR-CONTROL FAILS, THEN TRY ALL-NEGATIVE-GAIN-VALUES (Kp, Ki, and KD)!
+                            ("Kd_PosControl_Gain_UserSet", 40000.0),  #IF MOTOR-CONTROL FAILS, THEN TRY ALL-NEGATIVE-GAIN-VALUES (Kp, Ki, and KD)!
+                            ("DeadBand_PosControl_PhidgetsUnits_UserSet", 10.0),  #Lower DeadBand value is a tighter Position loop (allows less error)
+                            ("RescaleFactor_MultipliesPhidgetsUnits_UserSet", 1.0),
+                            ("UpdateDeltaT_ms", 100)]) #100 min for velocity, 20 min for position
+    #################################################
 
     if USE_BLDC_FLAG == 1:
         try:
-            PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject = PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(BLDC_setup_dict)
+
+            if USE_BLDC_POSITION_CONTROL_FLAG == 1:
+                PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject = PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(BLDC_setup_dict_PositionControl)
+
+            else:
+                PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject = PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(BLDC_setup_dict_VelocityControl)
+
             time.sleep(0.25)
             BLDC_OPEN_FLAG = PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.OBJECT_CREATED_SUCCESSFULLY_FLAG
 
@@ -424,8 +457,8 @@ if __name__ == '__main__':
 
     #################################################
     #################################################
-    if USE_MYPRINT_FLAG == 1 and MYPRINT_OPEN_FLAG != 1:
-        print("Failed to open MyPrint_ReubenPython2and3ClassObject.")
+    if USE_BLDC_FLAG == 1 and BLDC_OPEN_FLAG != 1:
+        print("Failed to open PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class.")
         input("Press any key (and enter) to exit.")
         sys.exit()
     #################################################
@@ -433,8 +466,8 @@ if __name__ == '__main__':
 
     #################################################
     #################################################
-    if USE_BLDC_FLAG == 1 and BLDC_OPEN_FLAG != 1:
-        print("Failed to open PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class.")
+    if USE_MYPRINT_FLAG == 1 and MYPRINT_OPEN_FLAG != 1:
+        print("Failed to open MyPrint_ReubenPython2and3ClassObject.")
         input("Press any key (and enter) to exit.")
         sys.exit()
     #################################################
@@ -459,6 +492,7 @@ if __name__ == '__main__':
         CurrentTime_MainLoopThread = getPreciseSecondsTimeStampString() - StartingTime_MainLoopThread
         ###################################################
 
+        ###################################################
         if USE_BLDC_FLAG == 1:
             ######################### GETs
             BLDC_MostRecentDict = PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.GetMostRecentDataDict()
@@ -483,19 +517,20 @@ if __name__ == '__main__':
 
             ######################### SETs
             time_gain = math.pi / (2.0 * SINUSOIDAL_MOTION_INPUT_ROMtestTimeToPeakAngle)
-            SINUSOIDAL_INPUT_TO_COMMAND = (SINUSOIDAL_MOTION_INPUT_MaxValue + SINUSOIDAL_MOTION_INPUT_MinValue)/2.0 + 0.5*abs(SINUSOIDAL_MOTION_INPUT_MaxValue - SINUSOIDAL_MOTION_INPUT_MinValue)*math.sin(time_gain*CurrentTime_MainLoopThread)
 
-            if USE_SINUSOIDAL_POS_CONTROL_INPUT_FLAG == 1 and USE_SINUSOIDAL_VEL_CONTROL_INPUT_FLAG == 0:
-                PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.CommandMotorFromExternalProgram("position", SINUSOIDAL_INPUT_TO_COMMAND)
+            if USE_BLDC_SINUSOIDAL_INPUT_FLAG == 1:
 
-            elif USE_SINUSOIDAL_POS_CONTROL_INPUT_FLAG == 0 and USE_SINUSOIDAL_VEL_CONTROL_INPUT_FLAG == 1:
-                PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.CommandMotorFromExternalProgram("velocity", SINUSOIDAL_INPUT_TO_COMMAND)
+                if USE_BLDC_POSITION_CONTROL_FLAG == 1:
+                    SINUSOIDAL_INPUT_TO_COMMAND = (SINUSOIDAL_MOTION_INPUT_MaxValue_PositionControl + SINUSOIDAL_MOTION_INPUT_MinValue_PositionControl)/2.0 + 0.5*abs(SINUSOIDAL_MOTION_INPUT_MaxValue_PositionControl - SINUSOIDAL_MOTION_INPUT_MinValue_PositionControl)*math.sin(time_gain*CurrentTime_MainLoopThread)
+                    PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.CommandMotorFromExternalProgram_PositionControl(SINUSOIDAL_INPUT_TO_COMMAND)
 
-            elif USE_SINUSOIDAL_POS_CONTROL_INPUT_FLAG == 1 and USE_SINUSOIDAL_VEL_CONTROL_INPUT_FLAG == 1:
-                print("CANNOT HAVE BOTH POS AND VEL CONTROL INPUTS")
+                else:
+                    SINUSOIDAL_INPUT_TO_COMMAND = (SINUSOIDAL_MOTION_INPUT_MaxValue_VelocityControl + SINUSOIDAL_MOTION_INPUT_MinValue_VelocityControl)/2.0 + 0.5*abs(SINUSOIDAL_MOTION_INPUT_MaxValue_VelocityControl - SINUSOIDAL_MOTION_INPUT_MinValue_VelocityControl)*math.sin(time_gain*CurrentTime_MainLoopThread)
+                    PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.CommandMotorFromExternalProgram_VelocityControl(SINUSOIDAL_INPUT_TO_COMMAND)
             #########################
 
             time.sleep(0.010)
+        ###################################################
 
         else:
             time.sleep(0.030)

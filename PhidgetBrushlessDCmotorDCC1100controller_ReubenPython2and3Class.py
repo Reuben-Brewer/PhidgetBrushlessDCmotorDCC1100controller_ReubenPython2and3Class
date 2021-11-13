@@ -6,9 +6,9 @@ reuben.brewer@gmail.com
 www.reubotics.com
 
 Apache 2 License
-Software Revision C, 09/03/2021
+Software Revision D, 11/12/2021
 
-Verified working on: Python 2.7 and 3 for Windows 8.1 64-bit and Raspberry Pi Buster (no Mac testing yet).
+Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit and Raspberry Pi Buster (no Mac testing yet).
 '''
 
 __author__ = 'reuben.brewer'
@@ -253,59 +253,45 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         ##########################################
 
         #########################################################
-        if "VINT_SerialNumber" in setup_dict:
+        if "VINT_DesiredSerialNumber" in setup_dict:
             try:
-                self.VINT_SerialNumber = int(setup_dict["VINT_SerialNumber"])
+                self.VINT_DesiredSerialNumber = int(setup_dict["VINT_DesiredSerialNumber"])
             except:
-                print("ERROR: VINT_SerialNumber invalid.")
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR:: VINT_DesiredSerialNumber invalid.")
         else:
             self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class ERROR: Must initialize object with 'VINT_SerialNumber' argument.")
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: Must initialize object with 'VINT_DesiredSerialNumber' argument.")
             return
 
-        print("VINT_SerialNumber: " + str(self.VINT_SerialNumber))
+        print("VINT_DesiredSerialNumber: " + str(self.VINT_DesiredSerialNumber))
         #########################################################
 
         #########################################################
-        if "VINT_PortNumber" in setup_dict:
+        if "VINT_DesiredPortNumber" in setup_dict:
             try:
-                self.VINT_PortNumber = int(setup_dict["VINT_PortNumber"])
+                self.VINT_DesiredPortNumber = int(setup_dict["VINT_DesiredPortNumber"])
             except:
-                print("ERROR: VINT_PortNumber invalid.")
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR:: VINT_DesiredPortNumber invalid.")
         else:
             self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class ERROR: Must initialize object with 'VINT_PortNumber' argument.")
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: Must initialize object with 'VINT_DesiredPortNumber' argument.")
             return
 
-        print("VINT_PortNumber: " + str(self.VINT_PortNumber))
+        print("VINT_DesiredPortNumber: " + str(self.VINT_DesiredPortNumber))
         #########################################################
 
         #########################################################
-        if "DeviceChannel" in setup_dict:
+        if "DesiredDeviceID" in setup_dict:
             try:
-                self.DeviceChannel = int(setup_dict["DeviceChannel"])
+                self.DesiredDeviceID = int(setup_dict["DesiredDeviceID"])
             except:
-                print("ERROR: DeviceChannel invalid.")
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: DesiredDeviceID invalid.")
         else:
             self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class ERROR: Must initialize object with 'DeviceChannel' argument.")
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: Must initialize object with 'DesiredDeviceID' argument.")
             return
 
-        print("DeviceChannel: " + str(self.DeviceChannel))
-        #########################################################
-
-        #########################################################
-        if "DeviceID" in setup_dict:
-            try:
-                self.DeviceID = int(setup_dict["DeviceID"])
-            except:
-                print("ERROR: DeviceID invalid.")
-        else:
-            self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class ERROR: Must initialize object with 'DeviceID' argument.")
-            return
-
-        print("DeviceID: " + str(self.DeviceID))
+        print("DesiredDeviceID: " + str(self.DesiredDeviceID))
         #########################################################
 
         #########################################################
@@ -333,7 +319,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
             if self.ENABLE_GETS_MAINTHREAD != 0 and self.ENABLE_GETS_MAINTHREAD != 1:
                 self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-                print("ERROR: ENABLE_GETS_MAINTHREAD in setup dict must be 0 or 1.")
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: ENABLE_GETS_MAINTHREAD in setup dict must be 0 or 1.")
                 return
         else:
             self.ENABLE_GETS_MAINTHREAD = 0
@@ -347,7 +333,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
             if self.ControlMode != "position" and self.ControlMode != "velocity":
                 self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-                print("ERROR: ControlMode in setup dict must be 'position' or 'velocity'.")
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: ControlMode in setup dict must be 'position' or 'velocity'.")
                 return
         else:
             self.ControlMode = "velocity"
@@ -401,20 +387,32 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         #########################################################
 
         #########################################################
+        if self.PositionMaxLimit_PhidgetsUnits_UserSet < self.PositionMinLimit_PhidgetsUnits_UserSet:
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: PositionMinLimit_PhidgetsUnits_UserSet must be smaller than PositionMaxLimit_PhidgetsUnits_UserSet!")
+            return
+        #########################################################
+
+        #########################################################
         if "VelocityMinLimit_PhidgetsUnits_UserSet" in setup_dict:
 
             if self.ControlMode == "position":
-                self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
+                if setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
+                else:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], -10000.0, 0.0)
 
             elif self.ControlMode == "velocity":
-                self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
+                if setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
+                else:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], -1.0, 0.0)
 
         else:
             if self.ControlMode == "position":
-                self.VelocityMinLimit_PhidgetsUnits_UserSet = 10000.0
+                self.VelocityMinLimit_PhidgetsUnits_UserSet = -10000.0
 
             elif self.ControlMode == "velocity":
-                self.VelocityMinLimit_PhidgetsUnits_UserSet = 1.0
+                self.VelocityMinLimit_PhidgetsUnits_UserSet = -1.0
 
         print("VelocityMinLimit_PhidgetsUnits_UserSet: " + str(self.VelocityMinLimit_PhidgetsUnits_UserSet))
         #########################################################
@@ -423,10 +421,16 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         if "VelocityMaxLimit_PhidgetsUnits_UserSet" in setup_dict:
 
             if self.ControlMode == "position":
-                self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
+                if setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
+                else:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], -10000.0, 0.0)
 
             elif self.ControlMode == "velocity":
-                self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
+                if setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
+                else:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], -1.0, 0.0)
 
         else:
             if self.ControlMode == "position":
@@ -437,7 +441,13 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         print("VelocityMaxLimit_PhidgetsUnits_UserSet: " + str(self.VelocityMaxLimit_PhidgetsUnits_UserSet))
         #########################################################
-        
+
+        #########################################################
+        if self.VelocityMaxLimit_PhidgetsUnits_UserSet < self.VelocityMinLimit_PhidgetsUnits_UserSet:
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: VelocityMinLimit_PhidgetsUnits_UserSet must be smaller than VelocityMaxLimit_PhidgetsUnits_UserSet!")
+            return
+        #########################################################
+
         #########################################################
         if "VelocityStallLimit_PhidgetsUnits_UserSet" in setup_dict:
 
@@ -565,6 +575,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         #########################################################
         self.CurrentTime_CalculatedFromMainThread = -11111.0
         self.LastTime_CalculatedFromMainThread = -11111.0
+        self.StartingTime_CalculatedFromMainThread = -11111.0
         self.DataStreamingFrequency_CalculatedFromMainThread = -11111.0
         self.DataStreamingDeltaT_CalculatedFromMainThread = -11111.0
 
@@ -663,7 +674,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         #########################################################
         try:
-            self.BLDCobject.setDeviceSerialNumber(self.VINT_SerialNumber)
+            self.BLDCobject.setDeviceSerialNumber(self.VINT_DesiredSerialNumber)
 
         except PhidgetException as e:
             print("Failed to call 'setDeviceSerialNumber()', exception:  %i: %s" % (e.code, e.details))
@@ -671,20 +682,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         #########################################################
         try:
-            self.BLDCobject.setHubPort(self.VINT_PortNumber)
+            self.BLDCobject.setHubPort(self.VINT_DesiredPortNumber)
 
         except PhidgetException as e:
             print("Failed to call 'setHubPort()', exception:  %i: %s" % (e.code, e.details))
         #########################################################
-
-        #########################################################
-        try:
-            self.BLDCobject.setChannel(self.DeviceChannel)
-
-        except PhidgetException as e:
-            print("Failed to call 'setChannel()', exception:  %i: %s" % (e.code, e.details))
-        #########################################################
-
 
         #########################################################
         try:
@@ -734,7 +736,6 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         #########################################################
 
         if self.device_connected_flag == 1:
-            dummy_var = 0
 
             #########################################################
             if self.UsePhidgetsLoggingInternalToThisClassObjectFlag == 1:
@@ -756,8 +757,8 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
             #########################################################
             try:
-                self.DetectedDeviceSerialNumber = self.BLDCobject.getDeviceSerialNumber()
-                print("DetectedDeviceSerialNumber: " + str(self.DetectedDeviceSerialNumber))
+                self.VINT_DetectedSerialNumber = self.BLDCobject.getDeviceSerialNumber()
+                print("VINT_DetectedSerialNumber: " + str(self.VINT_DetectedSerialNumber))
 
             except PhidgetException as e:
                 print("Failed to call 'getDeviceSerialNumber', Phidget Exception %i: %s" % (e.code, e.details))
@@ -791,26 +792,18 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             #########################################################
 
             #########################################################
-            if self.DetectedDeviceSerialNumber != self.VINT_SerialNumber:
-                print("The desired VINT_SerialNumber (" + str(self.VINT_SerialNumber) + ") does not match the detected serial number (" + str(self.DetectedDeviceSerialNumber) + ").")
+            if self.VINT_DetectedSerialNumber != self.VINT_DesiredSerialNumber:
+                print("The desired VINT_DesiredSerialNumber (" + str(self.VINT_DesiredSerialNumber) + ") does not match the detected serial number (" + str(self.VINT_DetectedSerialNumber) + ").")
                 input("Press any key (and enter) to exit.")
                 sys.exit()
             #########################################################
 
             #########################################################
-            if self.DetectedDeviceID != self.DeviceID:
-                print("The desired DeviceID (" + str(self.DeviceID) + ") does not match the detected serial number (" + str(self.DetectedDeviceID) + ").")
+            if self.DetectedDeviceID != self.DesiredDeviceID:
+                print("The DesiredDeviceID (" + str(self.DesiredDeviceID) + ") does not match the detected Device ID (" + str(self.DetectedDeviceID) + ").")
                 input("Press any key (and enter) to exit.")
                 sys.exit()
             #########################################################
-
-            #########################################################
-            if self.DetectedDeviceID != self.DeviceID:
-                print("The desired DeviceID (" + str(self.DeviceID) + ") does not match the detected serial number (" + str(self.DetectedDeviceID) + ").")
-                input("Press any key (and enter) to exit.")
-                sys.exit()
-            #########################################################
-
 
             #########################################################
             try:
@@ -904,7 +897,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 1
 
         else:
-            print("---------- Failed to open PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class for serial number " + str(self.VINT_SerialNumber) + " ----------")
+            print("---------- Failed to open PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class for serial number " + str(self.VINT_DesiredSerialNumber) + " ----------")
             self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
             return
     ##########################################################################################################
@@ -1310,7 +1303,6 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     ##########################################################################################################
 
-
     ##########################################################################################################
     ##########################################################################################################
     def CommandMotorFromExternalProgram_VelocityControl(self, commanded_velocity_PhidgetsUnits):
@@ -1407,11 +1399,13 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         self.BLDCobject.enableFailsafe(self.FailsafeTime_Milliseconds)
 
+        self.StartingTime_CalculatedFromMainThread = self.getPreciseSecondsTimeStampString()
+
         ###############################################
         while self.EXIT_PROGRAM_FLAG == 0:
 
             ###############################################
-            self.CurrentTime_CalculatedFromMainThread = self.getPreciseSecondsTimeStampString()
+            self.CurrentTime_CalculatedFromMainThread = self.getPreciseSecondsTimeStampString() - self.StartingTime_CalculatedFromMainThread
             ###############################################
 
             ###############################################
@@ -1632,6 +1626,14 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         ###################################################
         self.device_info_label = Label(self.myFrame, text="Device Info", width=75)
+
+        self.device_info_label["text"] = self.NameToDisplay_UserSet + \
+                                         "\nDevice Name: " + self.DetectedDeviceName + \
+                                         "\nVINT SerialNumber: " + str(self.VINT_DetectedSerialNumber) + \
+                                         "\nDeviceID: " + str(self.DetectedDeviceID) + \
+                                         "\nFW Ver: " + str(self.DetectedDeviceVersion) + \
+                                         "\nLibrary Ver: " + str(self.DetectedDeviceLibraryVersion)
+
         self.device_info_label.grid(row=0, column=0, padx=1, pady=1, columnspan=1, rowspan=1)
         ###################################################
 
@@ -2036,17 +2038,9 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                     #########################################################
 
                     #######################################################
-                    self.device_info_label["text"] =  self.NameToDisplay_UserSet +\
-                                                            "\nDevice Name: " + self.DetectedDeviceName +\
-                                                            "\nVINT SerialNumber: " + str(self.DetectedDeviceSerialNumber) +\
-                                                            "\nDeviceID: " + str(self.DetectedDeviceID) +\
-                                                            "\nFW Ver: " + str(self.DetectedDeviceVersion) +\
-                                                            "\nFW Ver: " + str(self.DetectedDeviceVersion) +\
-                                                            "\nLibrary Ver: " + str( self.DetectedDeviceLibraryVersion)
-                    #######################################################
-
-                    #######################################################
-                    self.data_label["text"] =  "Frequency MainThread(Hz): " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.DataStreamingFrequency_CalculatedFromMainThread, 0, 3) + \
+                    self.data_label["text"] =  "*** ControlMode: " + self.ControlMode + " ***" +\
+                                                "\nTime: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.CurrentTime_CalculatedFromMainThread, 0, 3) + \
+                                               "\nFrequency MainThread(Hz): " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.DataStreamingFrequency_CalculatedFromMainThread, 0, 3) + \
                                                 "\nFrequency Phidgets ON CHANGE Position Rx, can slow to 0 (Hz): " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.DataStreamingFrequency_OnPositionChangeCallbackFunction, 0, 3) + \
                                                 "\nTemperature_DegC_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Temperature_DegC_FromDevice, 0, 3) + \
                                                 "\nPosition_PhidgetsUnits_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Position_PhidgetsUnits_FromDevice, 0, 3) + \
