@@ -6,7 +6,7 @@ reuben.brewer@gmail.com
 www.reubotics.com
 
 Apache 2 License
-Software Revision D, 11/12/2021
+Software Revision E, 03/13/2022
 
 Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit and Raspberry Pi Buster (no Mac testing yet).
 '''
@@ -47,6 +47,14 @@ if sys.version_info[0] < 3:
 else:
     from future.builtins import input as input
 ############### #"sudo pip3 install future" (Python 3) AND "sudo pip install future" (Python 2)
+
+###############
+import platform
+if platform.system() == "Windows":
+    import ctypes
+    winmm = ctypes.WinDLL('winmm')
+    winmm.timeBeginPeriod(1) #Set minimum timer resolution to 1ms so that time.sleep(0.001) behaves properly.
+###############
 
 ###########################################################
 ###########################################################
@@ -222,6 +230,15 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                 self.GUI_COLUMNSPAN = 0
 
             print("GUI_COLUMNSPAN = " + str(self.GUI_COLUMNSPAN))
+            ##########################################
+
+            ##########################################
+            if "GUI_STICKY" in self.GUIparametersDict:
+                self.GUI_STICKY = str(self.GUIparametersDict["GUI_STICKY"])
+            else:
+                self.GUI_STICKY = "w"
+
+            print("GUI_STICKY = " + str(self.GUI_STICKY))
             ##########################################
 
         else:
@@ -567,6 +584,20 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         #########################################################
 
         #########################################################
+        if "LogFileNameFullPath" in setup_dict:
+            self.LogFileNameFullPath = str(setup_dict["LogFileNameFullPath"])
+
+            if self.LogFileNameFullPath.find("/") == -1 and self.LogFileNameFullPath.find("\\") == -1:
+                print("MyPrint_ReubenPython2and3Class __init__ error: 'LogFileNameFullPath' must be FULL path (should include slashes).")
+                return
+
+        else:
+            self.LogFileNameFullPath = os.getcwd() + "\PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class_PhidgetLog_INFO.txt"
+
+        print("LogFileNameFullPath = " + str(self.LogFileNameFullPath))
+        #########################################################
+
+        #########################################################
         self.PrintToGui_Label_TextInputHistory_List = [" "]*self.NumberOfPrintLines
         self.PrintToGui_Label_TextInput_Str = ""
         self.GUI_ready_to_be_updated_flag = 0
@@ -740,7 +771,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             #########################################################
             if self.UsePhidgetsLoggingInternalToThisClassObjectFlag == 1:
                 try:
-                    Log.enable(LogLevel.PHIDGET_LOG_INFO, os.getcwd() + "\PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class_PhidgetLog_INFO.txt")
+                    Log.enable(LogLevel.PHIDGET_LOG_INFO, self.LogFileNameFullPath)
                     print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__Enabled Phidget Logging.")
                 except PhidgetException as e:
                     print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__Failed to enable Phidget Logging, Phidget Exception %i: %s" % (e.code, e.details))
@@ -1612,7 +1643,8 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                           padx = self.GUI_PADX,
                           pady = self.GUI_PADY,
                           rowspan = self.GUI_ROWSPAN,
-                          columnspan= self.GUI_COLUMNSPAN)
+                          columnspan= self.GUI_COLUMNSPAN,
+                          sticky = self.GUI_STICKY)
         ###################################################
 
         ###################################################

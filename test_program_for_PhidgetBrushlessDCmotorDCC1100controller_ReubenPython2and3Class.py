@@ -6,7 +6,7 @@ reuben.brewer@gmail.com,
 www.reubotics.com
 
 Apache 2 License
-Software Revision D, 11/12/2021
+Software Revision E, 03/13/2022
 
 Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit and Raspberry Pi Buster (no Mac testing yet).
 '''
@@ -37,6 +37,14 @@ if sys.version_info[0] < 3:
     from builtins import raw_input as input
 else:
     from future.builtins import input as input #"sudo pip3 install future" (Python 3) AND "sudo pip install future" (Python 2)
+###############
+
+###############
+import platform
+if platform.system() == "Windows":
+    import ctypes
+    winmm = ctypes.WinDLL('winmm')
+    winmm.timeBeginPeriod(1) #Set minimum timer resolution to 1ms so that time.sleep(0.001) behaves properly.
 ###############
 
 ##########################################################################################################
@@ -102,30 +110,11 @@ def GUI_update_clock():
 ##########################################################################################################
 ##########################################################################################################
 def ExitProgram_Callback():
-    global root
     global EXIT_PROGRAM_FLAG
-    global GUI_RootAfterCallbackInterval_Milliseconds
 
-    global PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject
-    global BLDC_OPEN_FLAG
-
-    global MyPrint_ReubenPython2and3ClassObject
-    global MYPRINT_OPEN_FLAG
-
-    print("Exiting all threads in test_program_for_MyPrint_ReubenPython2and3Class.")
+    print("ExitProgram_Callback event fired!")
 
     EXIT_PROGRAM_FLAG = 1
-
-    #########################################################
-    if BLDC_OPEN_FLAG == 1:
-        PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.ExitProgram_Callback()
-    #########################################################
-
-    #########################################################
-    if MYPRINT_OPEN_FLAG == 1:
-        MyPrint_ReubenPython2and3ClassObject.ExitProgram_Callback()
-    #########################################################
-
 ##########################################################################################################
 ##########################################################################################################
 
@@ -254,21 +243,6 @@ if __name__ == '__main__':
     global EXIT_PROGRAM_FLAG
     EXIT_PROGRAM_FLAG = 0
 
-    global root
-
-    global GUI_RootAfterCallbackInterval_Milliseconds
-    GUI_RootAfterCallbackInterval_Milliseconds = 30
-
-    global PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject
-
-    global BLDC_OPEN_FLAG
-    BLDC_OPEN_FLAG = -1
-
-    global MyPrint_ReubenPython2and3ClassObject
-
-    global MYPRINT_OPEN_FLAG
-    MYPRINT_OPEN_FLAG = -1
-
     global CurrentTime_MainLoopThread
     CurrentTime_MainLoopThread = -11111.0
 
@@ -283,31 +257,26 @@ if __name__ == '__main__':
 
     global SINUSOIDAL_MOTION_INPUT_MaxValue_PositionControl
     SINUSOIDAL_MOTION_INPUT_MaxValue_PositionControl = 50.0
-    
+
     global SINUSOIDAL_MOTION_INPUT_MinValue_VelocityControl
     SINUSOIDAL_MOTION_INPUT_MinValue_VelocityControl = -1.0
 
     global SINUSOIDAL_MOTION_INPUT_MaxValue_VelocityControl
     SINUSOIDAL_MOTION_INPUT_MaxValue_VelocityControl = 1.0
-    #################################################
-    #################################################
 
-    #################################################  KEY GUI LINE
-    #################################################
-    if USE_GUI_FLAG == 1:
-        print("Starting GUI thread...")
-        GUI_Thread_ThreadingObject = threading.Thread(target=GUI_Thread)
-        GUI_Thread_ThreadingObject.setDaemon(True) #Should mean that the GUI thread is destroyed automatically when the main thread is destroyed.
-        GUI_Thread_ThreadingObject.start()
-        time.sleep(0.5)  #Allow enough time for 'root' to be created that we can then pass it into other classes.
-    else:
-        root = None
+    global root
+
+    global GUI_RootAfterCallbackInterval_Milliseconds
+    GUI_RootAfterCallbackInterval_Milliseconds = 30
     #################################################
     #################################################
 
     #################################################
     #################################################
-    #PositionInRev = PositionInPhidgetsUnits*(1.0/(NumberOfBLDCmotorPoles * 3.0)) * (1.0/GearRatio)
+    global PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject
+
+    global BLDC_OPEN_FLAG
+    BLDC_OPEN_FLAG = -1
 
     global BLDC_MostRecentDict
 
@@ -332,7 +301,38 @@ if __name__ == '__main__':
     global BLDC_MostRecentDict_Time
     BLDC_MostRecentDict_Time = -11111
 
+    #PositionInRev = PositionInPhidgetsUnits*(1.0/(NumberOfBLDCmotorPoles * 3.0)) * (1.0/GearRatio)
+
     #################################################
+    #################################################
+
+    #################################################
+    #################################################
+    global MyPrint_ReubenPython2and3ClassObject
+
+    global MYPRINT_OPEN_FLAG
+    MYPRINT_OPEN_FLAG = -1
+    #################################################
+    #################################################
+
+    #################################################  KEY GUI LINE
+    #################################################
+    if USE_GUI_FLAG == 1:
+        print("Starting GUI thread...")
+        GUI_Thread_ThreadingObject = threading.Thread(target=GUI_Thread)
+        GUI_Thread_ThreadingObject.setDaemon(True) #Should mean that the GUI thread is destroyed automatically when the main thread is destroyed.
+        GUI_Thread_ThreadingObject.start()
+        time.sleep(0.5)  #Allow enough time for 'root' to be created that we can then pass it into other classes.
+    else:
+        root = None
+    #################################################
+    #################################################
+
+    #################################################
+    #################################################
+
+    #################################################
+    global BLDC_GUIparametersDict
     BLDC_GUIparametersDict = dict([("USE_GUI_FLAG", USE_GUI_FLAG and SHOW_IN_GUI_BLDC_FLAG),
                                     ("root", root),
                                     ("EnableInternal_MyPrint_Flag", 1),
@@ -475,9 +475,10 @@ if __name__ == '__main__':
 
     ################################################# SHOWS HOW TO OFFSET THE ANGLE
     #################################################
-    #if BLDC_setup_dict["ControlMode"] == "position":
-    #    time.sleep(0.5)
-    #    PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.SetPositionOffsetOnBoardWithoutMoving(90)
+    #if USE_BLDC_FLAG == 1:
+    #    if BLDC_setup_dict["ControlMode"] == "position":
+    #        time.sleep(0.5)
+    #        PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.SetPositionOffsetOnBoardWithoutMoving(90)
     #################################################
     #################################################
 
@@ -538,6 +539,22 @@ if __name__ == '__main__':
     #################################################
     #################################################
 
+    #################################################
+    #################################################
     print("Exiting main program 'test_program_for_PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class.")
+
+    #########################################################
+    if BLDC_OPEN_FLAG == 1:
+        PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3ClassObject.ExitProgram_Callback()
+    #########################################################
+
+    #########################################################
+    if MYPRINT_OPEN_FLAG == 1:
+        MyPrint_ReubenPython2and3ClassObject.ExitProgram_Callback()
+    #########################################################
+
+    #################################################
+    #################################################
+
 ##########################################################################################################
 ##########################################################################################################
