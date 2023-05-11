@@ -6,24 +6,32 @@ reuben.brewer@gmail.com
 www.reubotics.com
 
 Apache 2 License
-Software Revision E, 03/13/2022
+Software Revision F, 05/10/2023
 
-Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit and Raspberry Pi Buster (no Mac testing yet).
+Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit and Raspberry Pi Buster (works on Mac without GUI enabled).
 '''
 
 __author__ = 'reuben.brewer'
 
+###########################################################
 from LowPassFilter_ReubenPython2and3Class import *
+###########################################################
 
-import os, sys, platform
-import time, datetime
+###########################################################
+import os
+import sys
+import platform
+import time
+import datetime
 import math
 import collections
+from copy import * #for deepcopy
 import inspect #To enable 'TellWhichFileWereIn'
 import threading
 import traceback
+###########################################################
 
-###############
+###########################################################
 if sys.version_info[0] < 3:
     from Tkinter import * #Python 2
     import tkFont
@@ -32,33 +40,31 @@ else:
     from tkinter import * #Python 3
     import tkinter.font as tkFont #Python 3
     from tkinter import ttk
-###############
+###########################################################
 
-###############
+###########################################################
 if sys.version_info[0] < 3:
     import Queue  # Python 2
 else:
     import queue as Queue  # Python 3
-###############
+###########################################################
 
-###############
+###########################################################
 if sys.version_info[0] < 3:
     from builtins import raw_input as input
 else:
     from future.builtins import input as input
-############### #"sudo pip3 install future" (Python 3) AND "sudo pip install future" (Python 2)
+########################################################### "sudo pip3 install future" (Python 3) AND "sudo pip install future" (Python 2)
 
-###############
+###########################################################
 import platform
 if platform.system() == "Windows":
     import ctypes
     winmm = ctypes.WinDLL('winmm')
     winmm.timeBeginPeriod(1) #Set minimum timer resolution to 1ms so that time.sleep(0.001) behaves properly.
-###############
+###########################################################
 
 ###########################################################
-###########################################################
-#To install Phidget22, enter folder "Phidget22Python_1.0.0.20190107\Phidget22Python" and type "python setup.py install"
 from Phidget22.PhidgetException import *
 from Phidget22.Phidget import *
 from Phidget22.Devices.Log import *
@@ -67,9 +73,7 @@ from Phidget22.Devices.TemperatureSensor import *
 from Phidget22.Devices.BLDCMotor import *
 from Phidget22.Devices.MotorPositionController import *
 ###########################################################
-###########################################################
 
-#http://stackoverflow.com/questions/19087515/subclassing-tkinter-to-create-a-custom-widget
 class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #Subclass the Tkinter Frame
 
     ##########################################################################################################
@@ -78,529 +82,13 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         print("#################### PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ starting. ####################")
 
+        #########################################################
         self.EXIT_PROGRAM_FLAG = 0
-        self.OBJECT_CREATED_SUCCESSFULLY_FLAG = -1
+        self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
         self.EnableInternal_MyPrint_Flag = 0
-
-        self.ThisIsFirstTimeEverAttachingFlag = 1
-        self.device_connected_flag = 0
         self.MainThread_still_running_flag = 0
-
-        ##########################################
-        ##########################################
-        if platform.system() == "Linux":
-
-            if "raspberrypi" in platform.uname(): #os.uname() doesn't work in windows
-                self.my_platform = "pi"
-            else:
-                self.my_platform = "linux"
-
-        elif platform.system() == "Windows":
-            self.my_platform = "windows"
-
-        elif platform.system() == "Darwin":
-            self.my_platform = "mac"
-
-        else:
-            self.my_platform = "other"
-
-        print("The OS platform is: " + self.my_platform)
-        ##########################################
-        ##########################################
-
-        ##########################################
-        ##########################################
-        if "GUIparametersDict" in setup_dict:
-            self.GUIparametersDict = setup_dict["GUIparametersDict"]
-
-            ##########################################
-            if "USE_GUI_FLAG" in self.GUIparametersDict:
-                self.USE_GUI_FLAG = self.PassThrough0and1values_ExitProgramOtherwise("USE_GUI_FLAG", self.GUIparametersDict["USE_GUI_FLAG"])
-            else:
-                self.USE_GUI_FLAG = 0
-
-            print("USE_GUI_FLAG = " + str(self.USE_GUI_FLAG))
-            ##########################################
-
-            ##########################################
-            if "root" in self.GUIparametersDict:
-                self.root = self.GUIparametersDict["root"]
-                self.RootIsOwnedExternallyFlag = 1
-            else:
-                self.root = None
-                self.RootIsOwnedExternallyFlag = 0
-
-            print("RootIsOwnedExternallyFlag = " + str(self.RootIsOwnedExternallyFlag))
-            ##########################################
-
-            ##########################################
-            if "GUI_RootAfterCallbackInterval_Milliseconds" in self.GUIparametersDict:
-                self.GUI_RootAfterCallbackInterval_Milliseconds = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_RootAfterCallbackInterval_Milliseconds", self.GUIparametersDict["GUI_RootAfterCallbackInterval_Milliseconds"], 0.0, 1000.0))
-            else:
-                self.GUI_RootAfterCallbackInterval_Milliseconds = 30
-
-            print("GUI_RootAfterCallbackInterval_Milliseconds = " + str(self.GUI_RootAfterCallbackInterval_Milliseconds))
-            ##########################################
-
-            ##########################################
-            if "EnableInternal_MyPrint_Flag" in self.GUIparametersDict:
-                self.EnableInternal_MyPrint_Flag = self.PassThrough0and1values_ExitProgramOtherwise("EnableInternal_MyPrint_Flag", self.GUIparametersDict["EnableInternal_MyPrint_Flag"])
-            else:
-                self.EnableInternal_MyPrint_Flag = 0
-
-            print("EnableInternal_MyPrint_Flag: " + str(self.EnableInternal_MyPrint_Flag))
-            ##########################################
-
-            ##########################################
-            if "PrintToConsoleFlag" in self.GUIparametersDict:
-                self.PrintToConsoleFlag = self.PassThrough0and1values_ExitProgramOtherwise("PrintToConsoleFlag", self.GUIparametersDict["PrintToConsoleFlag"])
-            else:
-                self.PrintToConsoleFlag = 1
-
-            print("PrintToConsoleFlag: " + str(self.PrintToConsoleFlag))
-            ##########################################
-
-            ##########################################
-            if "NumberOfPrintLines" in self.GUIparametersDict:
-                self.NumberOfPrintLines = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("NumberOfPrintLines", self.GUIparametersDict["NumberOfPrintLines"], 0.0, 50.0))
-            else:
-                self.NumberOfPrintLines = 10
-
-            print("NumberOfPrintLines = " + str(self.NumberOfPrintLines))
-            ##########################################
-
-            ##########################################
-            if "UseBorderAroundThisGuiObjectFlag" in self.GUIparametersDict:
-                self.UseBorderAroundThisGuiObjectFlag = self.PassThrough0and1values_ExitProgramOtherwise("UseBorderAroundThisGuiObjectFlag", self.GUIparametersDict["UseBorderAroundThisGuiObjectFlag"])
-            else:
-                self.UseBorderAroundThisGuiObjectFlag = 0
-
-            print("UseBorderAroundThisGuiObjectFlag: " + str(self.UseBorderAroundThisGuiObjectFlag))
-            ##########################################
-
-            ##########################################
-            if "GUI_ROW" in self.GUIparametersDict:
-                self.GUI_ROW = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_ROW", self.GUIparametersDict["GUI_ROW"], 0.0, 1000.0))
-            else:
-                self.GUI_ROW = 0
-
-            print("GUI_ROW = " + str(self.GUI_ROW))
-            ##########################################
-
-            ##########################################
-            if "GUI_COLUMN" in self.GUIparametersDict:
-                self.GUI_COLUMN = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_COLUMN", self.GUIparametersDict["GUI_COLUMN"], 0.0, 1000.0))
-            else:
-                self.GUI_COLUMN = 0
-
-            print("GUI_COLUMN = " + str(self.GUI_COLUMN))
-            ##########################################
-
-            ##########################################
-            if "GUI_PADX" in self.GUIparametersDict:
-                self.GUI_PADX = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_PADX", self.GUIparametersDict["GUI_PADX"], 0.0, 1000.0))
-            else:
-                self.GUI_PADX = 0
-
-            print("GUI_PADX = " + str(self.GUI_PADX))
-            ##########################################
-
-            ##########################################
-            if "GUI_PADY" in self.GUIparametersDict:
-                self.GUI_PADY = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_PADY", self.GUIparametersDict["GUI_PADY"], 0.0, 1000.0))
-            else:
-                self.GUI_PADY = 0
-
-            print("GUI_PADY = " + str(self.GUI_PADY))
-            ##########################################
-
-            ##########################################
-            if "GUI_ROWSPAN" in self.GUIparametersDict:
-                self.GUI_ROWSPAN = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_ROWSPAN", self.GUIparametersDict["GUI_ROWSPAN"], 0.0, 1000.0))
-            else:
-                self.GUI_ROWSPAN = 0
-
-            print("GUI_ROWSPAN = " + str(self.GUI_ROWSPAN))
-            ##########################################
-
-            ##########################################
-            if "GUI_COLUMNSPAN" in self.GUIparametersDict:
-                self.GUI_COLUMNSPAN = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_COLUMNSPAN", self.GUIparametersDict["GUI_COLUMNSPAN"], 0.0, 1000.0))
-            else:
-                self.GUI_COLUMNSPAN = 0
-
-            print("GUI_COLUMNSPAN = " + str(self.GUI_COLUMNSPAN))
-            ##########################################
-
-            ##########################################
-            if "GUI_STICKY" in self.GUIparametersDict:
-                self.GUI_STICKY = str(self.GUIparametersDict["GUI_STICKY"])
-            else:
-                self.GUI_STICKY = "w"
-
-            print("GUI_STICKY = " + str(self.GUI_STICKY))
-            ##########################################
-
-        else:
-            self.GUIparametersDict = dict()
-            self.USE_GUI_FLAG = 0
-            print("No GUIparametersDict present, setting USE_GUI_FLAG = " + str(self.USE_GUI_FLAG))
-
-        print("GUIparametersDict = " + str(self.GUIparametersDict))
-        ##########################################
-        ##########################################
-
-        ##########################################
-        if "UsePhidgetsLoggingInternalToThisClassObjectFlag" in setup_dict:
-            self.UsePhidgetsLoggingInternalToThisClassObjectFlag = self.PassThrough0and1values_ExitProgramOtherwise("UsePhidgetsLoggingInternalToThisClassObjectFlag", setup_dict["UsePhidgetsLoggingInternalToThisClassObjectFlag"])
-        else:
-            self.UsePhidgetsLoggingInternalToThisClassObjectFlag = 1
-
-        print("UsePhidgetsLoggingInternalToThisClassObjectFlag: " + str(self.UsePhidgetsLoggingInternalToThisClassObjectFlag))
-        ##########################################
-
-        ##########################################
-        if "WaitForAttached_TimeoutDuration_Milliseconds" in setup_dict:
-            self.WaitForAttached_TimeoutDuration_Milliseconds = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("WaitForAttached_TimeoutDuration_Milliseconds", setup_dict["WaitForAttached_TimeoutDuration_Milliseconds"], 0.0, 60000.0))
-
-        else:
-            self.WaitForAttached_TimeoutDuration_Milliseconds = 5000
-
-        print("WaitForAttached_TimeoutDuration_Milliseconds: " + str(self.WaitForAttached_TimeoutDuration_Milliseconds))
-        ##########################################
-
-        #########################################################
-        if "VINT_DesiredSerialNumber" in setup_dict:
-            try:
-                self.VINT_DesiredSerialNumber = int(setup_dict["VINT_DesiredSerialNumber"])
-            except:
-                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR:: VINT_DesiredSerialNumber invalid.")
-        else:
-            self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: Must initialize object with 'VINT_DesiredSerialNumber' argument.")
-            return
-
-        print("VINT_DesiredSerialNumber: " + str(self.VINT_DesiredSerialNumber))
-        #########################################################
-
-        #########################################################
-        if "VINT_DesiredPortNumber" in setup_dict:
-            try:
-                self.VINT_DesiredPortNumber = int(setup_dict["VINT_DesiredPortNumber"])
-            except:
-                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR:: VINT_DesiredPortNumber invalid.")
-        else:
-            self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: Must initialize object with 'VINT_DesiredPortNumber' argument.")
-            return
-
-        print("VINT_DesiredPortNumber: " + str(self.VINT_DesiredPortNumber))
-        #########################################################
-
-        #########################################################
-        if "DesiredDeviceID" in setup_dict:
-            try:
-                self.DesiredDeviceID = int(setup_dict["DesiredDeviceID"])
-            except:
-                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: DesiredDeviceID invalid.")
-        else:
-            self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: Must initialize object with 'DesiredDeviceID' argument.")
-            return
-
-        print("DesiredDeviceID: " + str(self.DesiredDeviceID))
-        #########################################################
-
-        #########################################################
-        if "NameToDisplay_UserSet" in setup_dict:
-            self.NameToDisplay_UserSet = str(setup_dict["NameToDisplay_UserSet"])
-        else:
-            self.NameToDisplay_UserSet = ""
-
-        print("NameToDisplay_UserSet: " + str(self.NameToDisplay_UserSet))
-        #########################################################
-
-        ##########################################
-        if "MainThread_TimeToSleepEachLoop" in setup_dict:
-            self.MainThread_TimeToSleepEachLoop = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("MainThread_TimeToSleepEachLoop", setup_dict["MainThread_TimeToSleepEachLoop"], 0.001, 100000)
-
-        else:
-            self.MainThread_TimeToSleepEachLoop = 0.005
-
-        print("MainThread_TimeToSleepEachLoop: " + str(self.MainThread_TimeToSleepEachLoop))
-        ##########################################
-
-        #########################################################
-        if "ENABLE_GETS_MAINTHREAD" in setup_dict:
-            self.ENABLE_GETS_MAINTHREAD = int(setup_dict["ENABLE_GETS_MAINTHREAD"])
-
-            if self.ENABLE_GETS_MAINTHREAD != 0 and self.ENABLE_GETS_MAINTHREAD != 1:
-                self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: ENABLE_GETS_MAINTHREAD in setup dict must be 0 or 1.")
-                return
-        else:
-            self.ENABLE_GETS_MAINTHREAD = 0
-
-        print("ENABLE_GETS_MAINTHREAD: " + str(self.ENABLE_GETS_MAINTHREAD))
-        #########################################################
-
-        #########################################################
-        if "ControlMode" in setup_dict:
-            self.ControlMode = str(setup_dict["ControlMode"]).lower()
-
-            if self.ControlMode != "position" and self.ControlMode != "velocity":
-                self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: ControlMode in setup dict must be 'position' or 'velocity'.")
-                return
-        else:
-            self.ControlMode = "velocity"
-
-        print("ControlMode: " + self.ControlMode)
-        #########################################################
-
-        ##########################################
-        if "UpdateDeltaT_ms" in setup_dict:
-            if self.ControlMode == "position":
-                self.UpdateDeltaT_ms = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("UpdateDeltaT_ms", setup_dict["UpdateDeltaT_ms"], 20.0, 60000.0))
-
-            elif self.ControlMode == "velocity":
-                self.UpdateDeltaT_ms = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("UpdateDeltaT_ms", setup_dict["UpdateDeltaT_ms"], 100.0, 60000.0))
-
-        else:
-            if self.ControlMode == "position":
-                self.UpdateDeltaT_ms = int(20.0)
-            elif self.ControlMode == "velocity":
-                self.UpdateDeltaT_ms = int(100.0)
-
-        print("UpdateDeltaT_ms: " + str(self.UpdateDeltaT_ms))
-        ##########################################
-
-        ##########################################
-        if "FailsafeTime_Milliseconds" in setup_dict:
-                self.FailsafeTime_Milliseconds = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("FailsafeTime_Milliseconds", setup_dict["FailsafeTime_Milliseconds"], 500.0, 30000.0))
-        else:
-            if self.ControlMode == "position":
-                self.FailsafeTime_Milliseconds = int(1000.0)
-
-        print("FailsafeTime_Milliseconds: " + str(self.FailsafeTime_Milliseconds))
-        ##########################################
-
-        #########################################################
-        if "PositionMinLimit_PhidgetsUnits_UserSet" in setup_dict:
-            self.PositionMinLimit_PhidgetsUnits_UserSet = setup_dict["PositionMinLimit_PhidgetsUnits_UserSet"]
-        else:
-            self.PositionMinLimit_PhidgetsUnits_UserSet = -7.24637681159e+12
-
-        print("PositionMinLimit_PhidgetsUnits_UserSet: " + str(self.PositionMinLimit_PhidgetsUnits_UserSet))
-        #########################################################
-
-        #########################################################
-        if "PositionMaxLimit_PhidgetsUnits_UserSet" in setup_dict:
-            self.PositionMaxLimit_PhidgetsUnits_UserSet = setup_dict["PositionMaxLimit_PhidgetsUnits_UserSet"]
-        else:
-            self.PositionMaxLimit_PhidgetsUnits_UserSet = 7.24637681159e+12
-
-        print("PositionMaxLimit_PhidgetsUnits_UserSet: " + str(self.PositionMaxLimit_PhidgetsUnits_UserSet))
-        #########################################################
-
-        #########################################################
-        if self.PositionMaxLimit_PhidgetsUnits_UserSet < self.PositionMinLimit_PhidgetsUnits_UserSet:
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: PositionMinLimit_PhidgetsUnits_UserSet must be smaller than PositionMaxLimit_PhidgetsUnits_UserSet!")
-            return
-        #########################################################
-
-        #########################################################
-        if "VelocityMinLimit_PhidgetsUnits_UserSet" in setup_dict:
-
-            if self.ControlMode == "position":
-                if setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"] > 0:
-                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
-                else:
-                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], -10000.0, 0.0)
-
-            elif self.ControlMode == "velocity":
-                if setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"] > 0:
-                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
-                else:
-                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], -1.0, 0.0)
-
-        else:
-            if self.ControlMode == "position":
-                self.VelocityMinLimit_PhidgetsUnits_UserSet = -10000.0
-
-            elif self.ControlMode == "velocity":
-                self.VelocityMinLimit_PhidgetsUnits_UserSet = -1.0
-
-        print("VelocityMinLimit_PhidgetsUnits_UserSet: " + str(self.VelocityMinLimit_PhidgetsUnits_UserSet))
-        #########################################################
-
-        #########################################################
-        if "VelocityMaxLimit_PhidgetsUnits_UserSet" in setup_dict:
-
-            if self.ControlMode == "position":
-                if setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"] > 0:
-                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
-                else:
-                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], -10000.0, 0.0)
-
-            elif self.ControlMode == "velocity":
-                if setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"] > 0:
-                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
-                else:
-                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], -1.0, 0.0)
-
-        else:
-            if self.ControlMode == "position":
-                self.VelocityMaxLimit_PhidgetsUnits_UserSet = 10000.0
-
-            elif self.ControlMode == "velocity":
-                self.VelocityMaxLimit_PhidgetsUnits_UserSet = 1.0
-
-        print("VelocityMaxLimit_PhidgetsUnits_UserSet: " + str(self.VelocityMaxLimit_PhidgetsUnits_UserSet))
-        #########################################################
-
-        #########################################################
-        if self.VelocityMaxLimit_PhidgetsUnits_UserSet < self.VelocityMinLimit_PhidgetsUnits_UserSet:
-            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__ ERROR: VelocityMinLimit_PhidgetsUnits_UserSet must be smaller than VelocityMaxLimit_PhidgetsUnits_UserSet!")
-            return
-        #########################################################
-
-        #########################################################
-        if "VelocityStallLimit_PhidgetsUnits_UserSet" in setup_dict:
-
-            if self.ControlMode == "position":
-                self.VelocityStallLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityStallLimit_PhidgetsUnits_UserSet", setup_dict["VelocityStallLimit_PhidgetsUnits_UserSet"], 0.0, 2000.0)
-
-            elif self.ControlMode == "velocity":
-                self.VelocityStallLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityStallLimit_PhidgetsUnits_UserSet", setup_dict["VelocityStallLimit_PhidgetsUnits_UserSet"], 0.0, 2000.0)
-
-        else:
-            if self.ControlMode == "position":
-                self.VelocityStallLimit_PhidgetsUnits_UserSet = 2000.0
-
-            elif self.ControlMode == "velocity":
-                self.VelocityStallLimit_PhidgetsUnits_UserSet = 2000.0
-
-        print("VelocityStallLimit_PhidgetsUnits_UserSet: " + str(self.VelocityStallLimit_PhidgetsUnits_UserSet))
-        #########################################################
-
-        #########################################################
-        if "BrakingStrengthLimit_VelControl_Percent_UserSet" in setup_dict:
-            self.BrakingStrengthLimit_VelControl_Percent_UserSet = float(setup_dict["BrakingStrengthLimit_VelControl_Percent_UserSet"])
-
-            if self.BrakingStrengthLimit_VelControl_Percent_UserSet < 0.0 or self.BrakingStrengthLimit_VelControl_Percent_UserSet > 100.0:
-                self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-                print("ERROR: BrakingStrengthLimit_VelControl_Percent_UserSet must be between 0.0 an 100.0 percent.")
-                return
-
-        else:
-            self.BrakingStrengthLimit_VelControl_Percent_UserSet = 50.0
-
-        print("BrakingStrengthLimit_VelControl_Percent_UserSet: " + str(self.BrakingStrengthLimit_VelControl_Percent_UserSet))
-        #########################################################
-
-        #########################################################
-        if "DeadBand_PosControl_PhidgetsUnits_UserSet" in setup_dict:
-            self.DeadBand_PosControl_PhidgetsUnits_UserSet = float(setup_dict["DeadBand_PosControl_PhidgetsUnits_UserSet"])
-
-            if self.DeadBand_PosControl_PhidgetsUnits_UserSet < 0.0:
-                self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-                print("ERROR: self.DeadBand_PosControl_PhidgetsUnits_UserSet must be grater than 0.")
-                return
-
-        else:
-            self.DeadBand_PosControl_PhidgetsUnits_UserSet = 0.0
-
-        print("DeadBand_PosControl_PhidgetsUnits_UserSet: " + str(self.DeadBand_PosControl_PhidgetsUnits_UserSet))
-        #########################################################
-
-        #########################################################
-        if "AccelerationMaxLimit_PhidgetsUnits_UserSet" in setup_dict:
-
-            if self.ControlMode == "position":
-                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("AccelerationMaxLimit_PhidgetsUnits_UserSet", setup_dict["AccelerationMaxLimit_PhidgetsUnits_UserSet"], 0.1, 100000.0)
-
-            elif self.ControlMode == "velocity":
-                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("AccelerationMaxLimit_PhidgetsUnits_UserSet", setup_dict["AccelerationMaxLimit_PhidgetsUnits_UserSet"], 0.1, 100.0)
-
-        else:
-            if self.ControlMode == "position":
-                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = 50000.0
-
-            elif self.ControlMode == "velocity":
-                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = 50.0
-
-        print("AccelerationMaxLimit_PhidgetsUnits_UserSet: " + str(self.AccelerationMaxLimit_PhidgetsUnits_UserSet))
-        #########################################################
-
-        #########################################################
-        if "Kp_PosControl_Gain_UserSet" in setup_dict:
-            self.Kp_PosControl_Gain_UserSet = float(setup_dict["Kp_PosControl_Gain_UserSet"])
-        else:
-            self.Kp_PosControl_Gain_UserSet = 20000.0
-
-        print("Kp_PosControl_Gain_UserSet: " + str(self.Kp_PosControl_Gain_UserSet))
-        #########################################################
-
-        #########################################################
-        if "Ki_PosControl_Gain_UserSet" in setup_dict:
-            self.Ki_PosControl_Gain_UserSet = float(setup_dict["Ki_PosControl_Gain_UserSet"])
-        else:
-            self.Ki_PosControl_Gain_UserSet = 2.0
-
-        print("Ki_PosControl_Gain_UserSet: " + str(self.Ki_PosControl_Gain_UserSet))
-        #########################################################
-        
-        #########################################################
-        if "Kd_PosControl_Gain_UserSet" in setup_dict:
-            self.Kd_PosControl_Gain_UserSet = float(setup_dict["Kd_PosControl_Gain_UserSet"])
-        else:
-            self.Kd_PosControl_Gain_UserSet = 40000.0
-
-        print("Kd_PosControl_Gain_UserSet: " + str(self.Kd_PosControl_Gain_UserSet))
-        #########################################################
-
-        #########################################################
-        if "RescaleFactor_MultipliesPhidgetsUnits_UserSet" in setup_dict:
-            self.RescaleFactor_MultipliesPhidgetsUnits_UserSet = float(setup_dict["RescaleFactor_MultipliesPhidgetsUnits_UserSet"])
-
-            if self.RescaleFactor_MultipliesPhidgetsUnits_UserSet < 0.0:
-                self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-                print("ERROR: self.RescaleFactor_MultipliesPhidgetsUnits_UserSet must be grater than 0.")
-                return
-
-        else:
-            self.RescaleFactor_MultipliesPhidgetsUnits_UserSet = 1.0
-
-        print("RescaleFactor_MultipliesPhidgetsUnits_UserSet: " + str(self.RescaleFactor_MultipliesPhidgetsUnits_UserSet))
-
-        print("-----------------------------------------------------------------------"
-                "\nFROM PHIDGETS BRUSHLESS DC MOTOR CONTROLLER USER'S GUIDE:"
-                "\nInstead of steps, brushless DC motors work in commutations. "
-                "\nThe number of commutations per rotation is equal to the number of poles multiplied by the number of phases. "
-                "\nSo, if you have an 8-Pole, 3-Phase motor, the motor will have 24 commutations per rotation. "
-                "\nFor this motor, to change the target position units from communications to rotations, you would set the rescale factor to 1/24, or 0.0416."
-                "\n-----------------------------------------------------------------------")
-        #########################################################
-
-        #########################################################
-        if "LogFileNameFullPath" in setup_dict:
-            self.LogFileNameFullPath = str(setup_dict["LogFileNameFullPath"])
-
-            if self.LogFileNameFullPath.find("/") == -1 and self.LogFileNameFullPath.find("\\") == -1:
-                print("MyPrint_ReubenPython2and3Class __init__ error: 'LogFileNameFullPath' must be FULL path (should include slashes).")
-                return
-
-        else:
-            self.LogFileNameFullPath = os.getcwd() + "\PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class_PhidgetLog_INFO.txt"
-
-        print("LogFileNameFullPath = " + str(self.LogFileNameFullPath))
-        #########################################################
-
-        #########################################################
-        self.PrintToGui_Label_TextInputHistory_List = [" "]*self.NumberOfPrintLines
-        self.PrintToGui_Label_TextInput_Str = ""
-        self.GUI_ready_to_be_updated_flag = 0
+        self.ThisIsFirstTimeEverAttachingFlag = 1
+        self.PhidgetsDeviceConnectedFlag = 0
         #########################################################
 
         #########################################################
@@ -609,17 +97,22 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         self.StartingTime_CalculatedFromMainThread = -11111.0
         self.DataStreamingFrequency_CalculatedFromMainThread = -11111.0
         self.DataStreamingDeltaT_CalculatedFromMainThread = -11111.0
+        #########################################################
 
+        #########################################################
         self.CurrentTime_OnPositionChangeCallbackFunction = -11111.0
         self.LastTime_OnPositionChangeCallbackFunction = -11111.0
         self.DataStreamingFrequency_OnPositionChangeCallbackFunction = -11111.0
         self.DataStreamingDeltaT_OnPositionChangeCallbackFunction = -11111.0
+        #########################################################
 
-        self.LastTime_FailsafeWasReset = -11111.0
-
+        #########################################################
         self.DetectedDeviceName = "default"
         self.DetectedDeviceID = "default"
         self.DetectedDeviceVersion = "default"
+        #########################################################
+
+        self.LastTime_FailsafeWasReset = -11111.0
 
         self.StopMotor_NeedsToBeChangedFlag = 0
 
@@ -660,13 +153,566 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         self.HomeMotorInPlace_NeedsToBeHomedFlag = 0
 
         self.ACCEPT_EXTERNAL_POSITION_COMMANDS_FLAG = 0
+
+        self.MostRecentDataDict = dict()
+
+        #########################################################
+        #########################################################
+        if platform.system() == "Linux":
+
+            if "raspberrypi" in platform.uname(): #os.uname() doesn't work in windows
+                self.my_platform = "pi"
+            else:
+                self.my_platform = "linux"
+
+        elif platform.system() == "Windows":
+            self.my_platform = "windows"
+
+        elif platform.system() == "Darwin":
+            self.my_platform = "mac"
+
+        else:
+            self.my_platform = "other"
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: The OS platform is: " + self.my_platform)
+        #########################################################
         #########################################################
 
         #########################################################
+        #########################################################
+        if "GUIparametersDict" in setup_dict:
+            self.GUIparametersDict = setup_dict["GUIparametersDict"]
+
+            #########################################################
+            if "USE_GUI_FLAG" in self.GUIparametersDict:
+                self.USE_GUI_FLAG = self.PassThrough0and1values_ExitProgramOtherwise("USE_GUI_FLAG", self.GUIparametersDict["USE_GUI_FLAG"])
+            else:
+                self.USE_GUI_FLAG = 0
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: USE_GUI_FLAG: " + str(self.USE_GUI_FLAG))
+            #########################################################
+
+            #########################################################
+            if "root" in self.GUIparametersDict:
+                self.root = self.GUIparametersDict["root"]
+            else:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, must pass in 'root'")
+                return
+            #########################################################
+
+            #########################################################
+            if "EnableInternal_MyPrint_Flag" in self.GUIparametersDict:
+                self.EnableInternal_MyPrint_Flag = self.PassThrough0and1values_ExitProgramOtherwise("EnableInternal_MyPrint_Flag", self.GUIparametersDict["EnableInternal_MyPrint_Flag"])
+            else:
+                self.EnableInternal_MyPrint_Flag = 0
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: EnableInternal_MyPrint_Flag: " + str(self.EnableInternal_MyPrint_Flag))
+            #########################################################
+
+            #########################################################
+            if "PrintToConsoleFlag" in self.GUIparametersDict:
+                self.PrintToConsoleFlag = self.PassThrough0and1values_ExitProgramOtherwise("PrintToConsoleFlag", self.GUIparametersDict["PrintToConsoleFlag"])
+            else:
+                self.PrintToConsoleFlag = 1
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: PrintToConsoleFlag: " + str(self.PrintToConsoleFlag))
+            #########################################################
+
+            #########################################################
+            if "NumberOfPrintLines" in self.GUIparametersDict:
+                self.NumberOfPrintLines = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("NumberOfPrintLines", self.GUIparametersDict["NumberOfPrintLines"], 0.0, 50.0))
+            else:
+                self.NumberOfPrintLines = 10
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: NumberOfPrintLines: " + str(self.NumberOfPrintLines))
+            #########################################################
+
+            #########################################################
+            if "UseBorderAroundThisGuiObjectFlag" in self.GUIparametersDict:
+                self.UseBorderAroundThisGuiObjectFlag = self.PassThrough0and1values_ExitProgramOtherwise("UseBorderAroundThisGuiObjectFlag", self.GUIparametersDict["UseBorderAroundThisGuiObjectFlag"])
+            else:
+                self.UseBorderAroundThisGuiObjectFlag = 0
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: UseBorderAroundThisGuiObjectFlag: " + str(self.UseBorderAroundThisGuiObjectFlag))
+            #########################################################
+
+            #########################################################
+            if "GUI_ROW" in self.GUIparametersDict:
+                self.GUI_ROW = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_ROW", self.GUIparametersDict["GUI_ROW"], 0.0, 1000.0))
+            else:
+                self.GUI_ROW = 0
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUI_ROW: " + str(self.GUI_ROW))
+            #########################################################
+
+            #########################################################
+            if "GUI_COLUMN" in self.GUIparametersDict:
+                self.GUI_COLUMN = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_COLUMN", self.GUIparametersDict["GUI_COLUMN"], 0.0, 1000.0))
+            else:
+                self.GUI_COLUMN = 0
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUI_COLUMN: " + str(self.GUI_COLUMN))
+            #########################################################
+
+            #########################################################
+            if "GUI_PADX" in self.GUIparametersDict:
+                self.GUI_PADX = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_PADX", self.GUIparametersDict["GUI_PADX"], 0.0, 1000.0))
+            else:
+                self.GUI_PADX = 0
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUI_PADX: " + str(self.GUI_PADX))
+            #########################################################
+
+            #########################################################
+            if "GUI_PADY" in self.GUIparametersDict:
+                self.GUI_PADY = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_PADY", self.GUIparametersDict["GUI_PADY"], 0.0, 1000.0))
+            else:
+                self.GUI_PADY = 0
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUI_PADY: " + str(self.GUI_PADY))
+            #########################################################
+
+            #########################################################
+            if "GUI_ROWSPAN" in self.GUIparametersDict:
+                self.GUI_ROWSPAN = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_ROWSPAN", self.GUIparametersDict["GUI_ROWSPAN"], 1.0, 1000.0))
+            else:
+                self.GUI_ROWSPAN = 1
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUI_ROWSPAN: " + str(self.GUI_ROWSPAN))
+            #########################################################
+
+            #########################################################
+            if "GUI_COLUMNSPAN" in self.GUIparametersDict:
+                self.GUI_COLUMNSPAN = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("GUI_COLUMNSPAN", self.GUIparametersDict["GUI_COLUMNSPAN"], 1.0, 1000.0))
+            else:
+                self.GUI_COLUMNSPAN = 1
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUI_COLUMNSPAN: " + str(self.GUI_COLUMNSPAN))
+            #########################################################
+
+            #########################################################
+            if "GUI_STICKY" in self.GUIparametersDict:
+                self.GUI_STICKY = str(self.GUIparametersDict["GUI_STICKY"])
+            else:
+                self.GUI_STICKY = "w"
+
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUI_STICKY = " + str(self.GUI_STICKY))
+            #########################################################
+
+        else:
+            self.GUIparametersDict = dict()
+            self.USE_GUI_FLAG = 0
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: No GUIparametersDict present, setting USE_GUI_FLAG: " + str(self.USE_GUI_FLAG))
+
+        #print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: GUIparametersDict: " + str(self.GUIparametersDict))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "UsePhidgetsLoggingInternalToThisClassObjectFlag" in setup_dict:
+            self.UsePhidgetsLoggingInternalToThisClassObjectFlag = self.PassThrough0and1values_ExitProgramOtherwise("UsePhidgetsLoggingInternalToThisClassObjectFlag", setup_dict["UsePhidgetsLoggingInternalToThisClassObjectFlag"])
+        else:
+            self.UsePhidgetsLoggingInternalToThisClassObjectFlag = 1
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: UsePhidgetsLoggingInternalToThisClassObjectFlag: " + str(self.UsePhidgetsLoggingInternalToThisClassObjectFlag))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "WaitForAttached_TimeoutDuration_Milliseconds" in setup_dict:
+            self.WaitForAttached_TimeoutDuration_Milliseconds = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("WaitForAttached_TimeoutDuration_Milliseconds", setup_dict["WaitForAttached_TimeoutDuration_Milliseconds"], 0.0, 60000.0))
+
+        else:
+            self.WaitForAttached_TimeoutDuration_Milliseconds = 5000
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: WaitForAttached_TimeoutDuration_Milliseconds: " + str(self.WaitForAttached_TimeoutDuration_Milliseconds))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "VINT_DesiredSerialNumber" in setup_dict:
+            try:
+                self.VINT_DesiredSerialNumber = int(setup_dict["VINT_DesiredSerialNumber"])
+            except:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, VINT_DesiredSerialNumber invalid.")
+        else:
+            self.VINT_DesiredSerialNumber = -1
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: VINT_DesiredSerialNumber: " + str(self.VINT_DesiredSerialNumber))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "VINT_DesiredPortNumber" in setup_dict:
+            try:
+                self.VINT_DesiredPortNumber = int(setup_dict["VINT_DesiredPortNumber"])
+            except:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, VINT_DesiredPortNumber invalid.")
+        else:
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, must initialize object with 'VINT_DesiredPortNumber' argument.")
+            return
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: VINT_DesiredPortNumber: " + str(self.VINT_DesiredPortNumber))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "DesiredDeviceID" in setup_dict:
+            try:
+                self.DesiredDeviceID = int(setup_dict["DesiredDeviceID"])
+            except:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, DesiredDeviceID invalid.")
+        else:
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, must initialize object with 'DesiredDeviceID' argument.")
+            return
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: DesiredDeviceID: " + str(self.DesiredDeviceID))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "NameToDisplay_UserSet" in setup_dict:
+            self.NameToDisplay_UserSet = str(setup_dict["NameToDisplay_UserSet"])
+        else:
+            self.NameToDisplay_UserSet = ""
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: NameToDisplay_UserSet: " + str(self.NameToDisplay_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "MainThread_TimeToSleepEachLoop" in setup_dict:
+            self.MainThread_TimeToSleepEachLoop = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("MainThread_TimeToSleepEachLoop", setup_dict["MainThread_TimeToSleepEachLoop"], 0.001, 100000)
+
+        else:
+            self.MainThread_TimeToSleepEachLoop = 0.005
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: MainThread_TimeToSleepEachLoop: " + str(self.MainThread_TimeToSleepEachLoop))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "ENABLE_GETS_MAINTHREAD" in setup_dict:
+            self.ENABLE_GETS_MAINTHREAD = int(setup_dict["ENABLE_GETS_MAINTHREAD"])
+
+            if self.ENABLE_GETS_MAINTHREAD != 0 and self.ENABLE_GETS_MAINTHREAD != 1:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, ENABLE_GETS_MAINTHREAD in setup dict must be 0 or 1.")
+                return
+        else:
+            self.ENABLE_GETS_MAINTHREAD = 0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: ENABLE_GETS_MAINTHREAD: " + str(self.ENABLE_GETS_MAINTHREAD))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "ControlMode" in setup_dict:
+            self.ControlMode = str(setup_dict["ControlMode"]).lower()
+
+            if self.ControlMode != "position" and self.ControlMode != "velocity":
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, ControlMode in setup dict must be 'position' or 'velocity'.")
+                return
+        else:
+            self.ControlMode = "velocity"
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: ControlMode: " + self.ControlMode)
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "UpdateDeltaT_ms" in setup_dict:
+            if self.ControlMode == "position":
+                self.UpdateDeltaT_ms = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("UpdateDeltaT_ms", setup_dict["UpdateDeltaT_ms"], 20.0, 60000.0))
+
+            elif self.ControlMode == "velocity":
+                self.UpdateDeltaT_ms = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("UpdateDeltaT_ms", setup_dict["UpdateDeltaT_ms"], 100.0, 60000.0))
+
+        else:
+            if self.ControlMode == "position":
+                self.UpdateDeltaT_ms = int(20.0)
+            elif self.ControlMode == "velocity":
+                self.UpdateDeltaT_ms = int(100.0)
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: UpdateDeltaT_ms: " + str(self.UpdateDeltaT_ms))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "FailsafeTime_Milliseconds" in setup_dict:
+                self.FailsafeTime_Milliseconds = int(self.PassThroughFloatValuesInRange_ExitProgramOtherwise("FailsafeTime_Milliseconds", setup_dict["FailsafeTime_Milliseconds"], 500.0, 30000.0))
+        else:
+            if self.ControlMode == "position":
+                self.FailsafeTime_Milliseconds = int(1000.0)
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: FailsafeTime_Milliseconds: " + str(self.FailsafeTime_Milliseconds))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "PositionMinLimit_PhidgetsUnits_UserSet" in setup_dict:
+            self.PositionMinLimit_PhidgetsUnits_UserSet = setup_dict["PositionMinLimit_PhidgetsUnits_UserSet"]
+        else:
+            self.PositionMinLimit_PhidgetsUnits_UserSet = -7.24637681159e+12
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: PositionMinLimit_PhidgetsUnits_UserSet: " + str(self.PositionMinLimit_PhidgetsUnits_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "PositionMaxLimit_PhidgetsUnits_UserSet" in setup_dict:
+            self.PositionMaxLimit_PhidgetsUnits_UserSet = setup_dict["PositionMaxLimit_PhidgetsUnits_UserSet"]
+        else:
+            self.PositionMaxLimit_PhidgetsUnits_UserSet = 7.24637681159e+12
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: PositionMaxLimit_PhidgetsUnits_UserSet: " + str(self.PositionMaxLimit_PhidgetsUnits_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if self.PositionMaxLimit_PhidgetsUnits_UserSet < self.PositionMinLimit_PhidgetsUnits_UserSet:
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, PositionMinLimit_PhidgetsUnits_UserSet must be smaller than PositionMaxLimit_PhidgetsUnits_UserSet!")
+            return
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "VelocityMinLimit_PhidgetsUnits_UserSet" in setup_dict:
+
+            if self.ControlMode == "position":
+                if setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
+                else:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], -10000.0, 0.0)
+
+            elif self.ControlMode == "velocity":
+                if setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
+                else:
+                    self.VelocityMinLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMinLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMinLimit_PhidgetsUnits_UserSet"], -1.0, 0.0)
+
+        else:
+            if self.ControlMode == "position":
+                self.VelocityMinLimit_PhidgetsUnits_UserSet = -10000.0
+
+            elif self.ControlMode == "velocity":
+                self.VelocityMinLimit_PhidgetsUnits_UserSet = -1.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: VelocityMinLimit_PhidgetsUnits_UserSet: " + str(self.VelocityMinLimit_PhidgetsUnits_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "VelocityMaxLimit_PhidgetsUnits_UserSet" in setup_dict:
+
+            if self.ControlMode == "position":
+                if setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 10000.0)
+                else:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], -10000.0, 0.0)
+
+            elif self.ControlMode == "velocity":
+                if setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"] > 0:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], 0.0, 1.0)
+                else:
+                    self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityMaxLimit_PhidgetsUnits_UserSet", setup_dict["VelocityMaxLimit_PhidgetsUnits_UserSet"], -1.0, 0.0)
+
+        else:
+            if self.ControlMode == "position":
+                self.VelocityMaxLimit_PhidgetsUnits_UserSet = 10000.0
+
+            elif self.ControlMode == "velocity":
+                self.VelocityMaxLimit_PhidgetsUnits_UserSet = 1.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: VelocityMaxLimit_PhidgetsUnits_UserSet: " + str(self.VelocityMaxLimit_PhidgetsUnits_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if self.VelocityMaxLimit_PhidgetsUnits_UserSet < self.VelocityMinLimit_PhidgetsUnits_UserSet:
+            print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, VelocityMinLimit_PhidgetsUnits_UserSet must be smaller than VelocityMaxLimit_PhidgetsUnits_UserSet!")
+            return
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "VelocityStallLimit_PhidgetsUnits_UserSet" in setup_dict:
+
+            if self.ControlMode == "position":
+                self.VelocityStallLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityStallLimit_PhidgetsUnits_UserSet", setup_dict["VelocityStallLimit_PhidgetsUnits_UserSet"], 0.0, 2000.0)
+
+            elif self.ControlMode == "velocity":
+                self.VelocityStallLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("VelocityStallLimit_PhidgetsUnits_UserSet", setup_dict["VelocityStallLimit_PhidgetsUnits_UserSet"], 0.0, 2000.0)
+
+        else:
+            if self.ControlMode == "position":
+                self.VelocityStallLimit_PhidgetsUnits_UserSet = 2000.0
+
+            elif self.ControlMode == "velocity":
+                self.VelocityStallLimit_PhidgetsUnits_UserSet = 2000.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: VelocityStallLimit_PhidgetsUnits_UserSet: " + str(self.VelocityStallLimit_PhidgetsUnits_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "BrakingStrengthLimit_VelControl_Percent_UserSet" in setup_dict:
+            self.BrakingStrengthLimit_VelControl_Percent_UserSet = float(setup_dict["BrakingStrengthLimit_VelControl_Percent_UserSet"])
+
+            if self.BrakingStrengthLimit_VelControl_Percent_UserSet < 0.0 or self.BrakingStrengthLimit_VelControl_Percent_UserSet > 100.0:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, BrakingStrengthLimit_VelControl_Percent_UserSet must be between 0.0 an 100.0 percent.")
+                return
+
+        else:
+            self.BrakingStrengthLimit_VelControl_Percent_UserSet = 50.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: BrakingStrengthLimit_VelControl_Percent_UserSet: " + str(self.BrakingStrengthLimit_VelControl_Percent_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "DeadBand_PosControl_PhidgetsUnits_UserSet" in setup_dict:
+            self.DeadBand_PosControl_PhidgetsUnits_UserSet = float(setup_dict["DeadBand_PosControl_PhidgetsUnits_UserSet"])
+
+            if self.DeadBand_PosControl_PhidgetsUnits_UserSet < 0.0:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, DeadBand_PosControl_PhidgetsUnits_UserSet must be greater than 0.")
+                return
+
+        else:
+            self.DeadBand_PosControl_PhidgetsUnits_UserSet = 0.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: DeadBand_PosControl_PhidgetsUnits_UserSet: " + str(self.DeadBand_PosControl_PhidgetsUnits_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "AccelerationMaxLimit_PhidgetsUnits_UserSet" in setup_dict:
+
+            if self.ControlMode == "position":
+                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("AccelerationMaxLimit_PhidgetsUnits_UserSet", setup_dict["AccelerationMaxLimit_PhidgetsUnits_UserSet"], 0.1, 100000.0)
+
+            elif self.ControlMode == "velocity":
+                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("AccelerationMaxLimit_PhidgetsUnits_UserSet", setup_dict["AccelerationMaxLimit_PhidgetsUnits_UserSet"], 0.1, 100.0)
+
+        else:
+            if self.ControlMode == "position":
+                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = 50000.0
+
+            elif self.ControlMode == "velocity":
+                self.AccelerationMaxLimit_PhidgetsUnits_UserSet = 50.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: AccelerationMaxLimit_PhidgetsUnits_UserSet: " + str(self.AccelerationMaxLimit_PhidgetsUnits_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "Kp_PosControl_Gain_UserSet" in setup_dict:
+            self.Kp_PosControl_Gain_UserSet = float(setup_dict["Kp_PosControl_Gain_UserSet"])
+        else:
+            self.Kp_PosControl_Gain_UserSet = 20000.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Kp_PosControl_Gain_UserSet: " + str(self.Kp_PosControl_Gain_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "Ki_PosControl_Gain_UserSet" in setup_dict:
+            self.Ki_PosControl_Gain_UserSet = float(setup_dict["Ki_PosControl_Gain_UserSet"])
+        else:
+            self.Ki_PosControl_Gain_UserSet = 2.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Ki_PosControl_Gain_UserSet: " + str(self.Ki_PosControl_Gain_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "Kd_PosControl_Gain_UserSet" in setup_dict:
+            self.Kd_PosControl_Gain_UserSet = float(setup_dict["Kd_PosControl_Gain_UserSet"])
+        else:
+            self.Kd_PosControl_Gain_UserSet = 40000.0
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Kd_PosControl_Gain_UserSet: " + str(self.Kd_PosControl_Gain_UserSet))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "RescaleFactor_MultipliesPhidgetsUnits_UserSet" in setup_dict:
+            self.RescaleFactor_MultipliesPhidgetsUnits_UserSet = float(setup_dict["RescaleFactor_MultipliesPhidgetsUnits_UserSet"])
+
+            if self.RescaleFactor_MultipliesPhidgetsUnits_UserSet < 0.0:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: Error, RescaleFactor_MultipliesPhidgetsUnits_UserSet must be grater than 0.")
+                return
+
+        else:
+            self.RescaleFactor_MultipliesPhidgetsUnits_UserSet = 1.0
+
+        print("RescaleFactor_MultipliesPhidgetsUnits_UserSet: " + str(self.RescaleFactor_MultipliesPhidgetsUnits_UserSet))
+
+        '''
+        print("-----------------------------------------------------------------------"
+                "\nFROM PHIDGETS BRUSHLESS DC MOTOR CONTROLLER USER'S GUIDE:"
+                "\nInstead of steps, brushless DC motors work in commutations. "
+                "\nThe number of commutations per rotation is equal to the number of poles multiplied by the number of phases. "
+                "\nSo, if you have an 8-Pole, 3-Phase motor, the motor will have 24 commutations per rotation. "
+                "\nFor this motor, to change the target position units from communications to rotations, you would set the rescale factor to 1/24, or 0.0416."
+                "\n-----------------------------------------------------------------------")
+        '''
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        if "LogFileNameFullPath" in setup_dict:
+            self.LogFileNameFullPath = str(setup_dict["LogFileNameFullPath"])
+
+            if self.LogFileNameFullPath.find("/") == -1 and self.LogFileNameFullPath.find("\\") == -1:
+                print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__:  Error, 'LogFileNameFullPath' must be FULL path (should include slashes).")
+                return
+
+        else:
+            self.LogFileNameFullPath = os.getcwd() + "\PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class_PhidgetLog_INFO.txt"
+
+        print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__: LogFileNameFullPath: " + str(self.LogFileNameFullPath))
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        self.PrintToGui_Label_TextInputHistory_List = [" "]*self.NumberOfPrintLines
+        self.PrintToGui_Label_TextInput_Str = ""
+        self.GUI_ready_to_be_updated_flag = 0
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
         try:
             self.Velocity_LowPassFilter_ReubenPython2and3ClassObject = LowPassFilter_ReubenPython2and3Class(dict([("UseMedianFilterFlag", 0),
-                                                                                                            ("UseExponentialSmoothingFilterFlag", 1),
-                                                                                                            ("ExponentialSmoothingFilterLambda", 0.2)]))
+                                                                                                            ("UseExponentialSmoothingFilterFlag", 1),                                                                                             ("ExponentialSmoothingFilterLambda", 0.2)]))
             time.sleep(0.1)
             self.VELOCITY_LOWPASSFILTER_OPEN_FLAG = self.Velocity_LowPassFilter_ReubenPython2and3ClassObject.OBJECT_CREATED_SUCCESSFULLY_FLAG
 
@@ -679,12 +725,16 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             exceptions = sys.exc_info()[0]
             print("LowPassFilter_ReubenPython2and3Class __init__: Exceptions: %s" % exceptions)
         #########################################################
+        #########################################################
 
+        #########################################################
         #########################################################
         self.BrakingStrengthLimit_VelControl_PhidgetsUnits_UserSet = 0.01 * self.BrakingStrengthLimit_VelControl_Percent_UserSet * 1.0 #self.BrakingStrengthStallLimit_PhidgetsUnits_FromDevice
         print("BrakingStrengthLimit_VelControl_PhidgetsUnits_UserSet: " + str(self.BrakingStrengthLimit_VelControl_PhidgetsUnits_UserSet))
         #########################################################
+        #########################################################
 
+        #########################################################
         #########################################################
         try:
 
@@ -702,15 +752,20 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         except PhidgetException as e:
             print("Failed to create main motor object, exception:  %i: %s" % (e.code, e.details))
         #########################################################
+        #########################################################
 
         #########################################################
+        #########################################################
         try:
-            self.BLDCobject.setDeviceSerialNumber(self.VINT_DesiredSerialNumber)
+            if self.VINT_DesiredSerialNumber != -1:  # '-1' means we should open the device regardless of serial number.
+                self.BLDCobject.setDeviceSerialNumber(self.VINT_DesiredSerialNumber)
 
         except PhidgetException as e:
             print("Failed to call 'setDeviceSerialNumber()', exception:  %i: %s" % (e.code, e.details))
         #########################################################
+        #########################################################
 
+        #########################################################
         #########################################################
         try:
             self.BLDCobject.setHubPort(self.VINT_DesiredPortNumber)
@@ -718,7 +773,9 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         except PhidgetException as e:
             print("Failed to call 'setHubPort()', exception:  %i: %s" % (e.code, e.details))
         #########################################################
+        #########################################################
 
+        #########################################################
         #########################################################
         try:
 
@@ -747,11 +804,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
             self.TemperatureObject.openWaitForAttachment(self.WaitForAttached_TimeoutDuration_Milliseconds)
 
-            self.device_connected_flag = 1
+            self.PhidgetsDeviceConnectedFlag = 1
             print("Attached the BLDC object.")
 
         except PhidgetException as e:
-            self.device_connected_flag = 0
+            self.PhidgetsDeviceConnectedFlag = 0
             print("Failed to call 'openWaitForAttachment()', exception:  %i: %s" % (e.code, e.details))
 
             try:
@@ -760,14 +817,16 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
             except PhidgetException as e:
                 print("Failed to call 'close()', exception:  %i: %s" % (e.code, e.details))
-        #########################################################
-
 
         #########################################################
         #########################################################
 
-        if self.device_connected_flag == 1:
+        #########################################################
+        #########################################################
+        #########################################################
+        if self.PhidgetsDeviceConnectedFlag == 1:
 
+            #########################################################
             #########################################################
             if self.UsePhidgetsLoggingInternalToThisClassObjectFlag == 1:
                 try:
@@ -775,6 +834,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                     print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__Enabled Phidget Logging.")
                 except PhidgetException as e:
                     print("PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class __init__Failed to enable Phidget Logging, Phidget Exception %i: %s" % (e.code, e.details))
+            #########################################################
             #########################################################
 
             #########################################################
@@ -785,7 +845,9 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             except PhidgetException as e:
                 print("Failed to call 'getDeviceName', Phidget Exception %i: %s" % (e.code, e.details))
             #########################################################
+            #########################################################
 
+            #########################################################
             #########################################################
             try:
                 self.VINT_DetectedSerialNumber = self.BLDCobject.getDeviceSerialNumber()
@@ -794,7 +856,9 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             except PhidgetException as e:
                 print("Failed to call 'getDeviceSerialNumber', Phidget Exception %i: %s" % (e.code, e.details))
             #########################################################
+            #########################################################
 
+            #########################################################
             #########################################################
             try:
                 self.DetectedDeviceID = self.BLDCobject.getDeviceID()
@@ -803,7 +867,9 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             except PhidgetException as e:
                 print("Failed to call 'getDeviceID', Phidget Exception %i: %s" % (e.code, e.details))
             #########################################################
+            #########################################################
 
+            #########################################################
             #########################################################
             try:
                 self.DetectedDeviceVersion = self.BLDCobject.getDeviceVersion()
@@ -812,7 +878,9 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             except PhidgetException as e:
                 print("Failed to call 'getDeviceVersion', Phidget Exception %i: %s" % (e.code, e.details))
             #########################################################
+            #########################################################
 
+            #########################################################
             #########################################################
             try:
                 self.DetectedDeviceLibraryVersion = self.BLDCobject.getLibraryVersion()
@@ -821,41 +889,49 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             except PhidgetException as e:
                 print("Failed to call 'getLibraryVersion', Phidget Exception %i: %s" % (e.code, e.details))
             #########################################################
+            #########################################################
 
             #########################################################
-            if self.VINT_DetectedSerialNumber != self.VINT_DesiredSerialNumber:
-                print("The desired VINT_DesiredSerialNumber (" + str(self.VINT_DesiredSerialNumber) + ") does not match the detected serial number (" + str(self.VINT_DetectedSerialNumber) + ").")
-                input("Press any key (and enter) to exit.")
-                sys.exit()
+            #########################################################
+            if self.VINT_DesiredSerialNumber != -1:
+                if self.VINT_DetectedSerialNumber != self.VINT_DesiredSerialNumber:
+                    print("The desired VINT_DesiredSerialNumber (" + str(self.VINT_DesiredSerialNumber) + ") does not match the detected serial number (" + str(self.VINT_DetectedSerialNumber) + ").")
+                    self.CloseAllPhidgetObjects()
+                    time.sleep(0.25)
+                    return
+            #########################################################
             #########################################################
 
             #########################################################
             if self.DetectedDeviceID != self.DesiredDeviceID:
                 print("The DesiredDeviceID (" + str(self.DesiredDeviceID) + ") does not match the detected Device ID (" + str(self.DetectedDeviceID) + ").")
-                input("Press any key (and enter) to exit.")
-                sys.exit()
+                self.CloseAllPhidgetObjects()
+                time.sleep(0.25)
+                return
+            #########################################################
             #########################################################
 
+            #########################################################
             #########################################################
             try:
 
-                ############################
+                #########################################################
                 self.FailsafeTimeMinLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMinFailsafeTime()
                 print("FailsafeTimeMinLimit_PhidgetsUnits_FromDevice: " + str(self.FailsafeTimeMinLimit_PhidgetsUnits_FromDevice))
 
                 self.FailsafeTimeMaxLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMaxFailsafeTime()
                 print("FailsafeTimeMaxLimit_PhidgetsUnits_FromDevice: " + str(self.FailsafeTimeMaxLimit_PhidgetsUnits_FromDevice))
-                ############################
+                #########################################################
 
-                ############################
+                #########################################################
                 self.PositionMinLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMinPosition()
                 print("PositionMinLimit_PhidgetsUnits_FromDevice: " + str(self.PositionMinLimit_PhidgetsUnits_FromDevice))
 
                 self.PositionMaxLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMaxPosition()
                 print("PositionMaxLimit_PhidgetsUnits_FromDevice: " + str(self.PositionMaxLimit_PhidgetsUnits_FromDevice))
-                ############################
+                #########################################################
 
-                ############################
+                #########################################################
                 if self.ControlMode == "velocity":
                     self.VelocityMinLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMinVelocity()
                     self.VelocityMaxLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMaxVelocity()
@@ -866,71 +942,105 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
                 print("VelocityMinLimit_PhidgetsUnits_FromDevice: " + str(self.VelocityMinLimit_PhidgetsUnits_FromDevice))
                 print("VelocityMaxLimit_PhidgetsUnits_FromDevice: " + str(self.VelocityMaxLimit_PhidgetsUnits_FromDevice))
-                ############################
+                #########################################################
 
-                ############################
+                #########################################################
                 self.VelocityMinStallLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMinStallVelocity()
                 self.VelocityMaxStallLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMaxStallVelocity()
 
                 print("VelocityMinStallLimit_PhidgetsUnits_FromDevice: " + str(self.VelocityMinStallLimit_PhidgetsUnits_FromDevice))
                 print("VelocityMaxStallLimit_PhidgetsUnits_FromDevice: " + str(self.VelocityMaxStallLimit_PhidgetsUnits_FromDevice))
-                ############################
+                #########################################################
 
-                ############################
+                #########################################################
                 self.AccelerationMinLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMinAcceleration()
                 print("AccelerationMinLimit_PhidgetsUnits_FromDevice: " + str(self.AccelerationMinLimit_PhidgetsUnits_FromDevice))
 
                 self.AccelerationMaxLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMaxAcceleration()
                 print("AccelerationMaxLimit_PhidgetsUnits_FromDevice: " + str(self.AccelerationMaxLimit_PhidgetsUnits_FromDevice))
-                ############################
+                #########################################################
 
-                ############################
+                #########################################################
                 self.DataIntervalMin = self.BLDCobject.getMinDataInterval()
                 print("DataIntervalMin: " + str(self.DataIntervalMin))
 
                 self.DataIntervalMax = self.BLDCobject.getMaxDataInterval()
                 print("DataIntervalMax: " + str(self.DataIntervalMax))
-                ############################
+                #########################################################
 
-                ############################
+                #########################################################
                 if self.ControlMode == "velocity":
                     self.BrakingStrengthMinLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMinBrakingStrength()
                     self.BrakingStrengthMaxLimit_PhidgetsUnits_FromDevice = self.BLDCobject.getMaxBrakingStrength()
                     print("BrakingStrengthMinLimit_PhidgetsUnits_FromDevice: " + str(self.BrakingStrengthMinLimit_PhidgetsUnits_FromDevice))
                     print("BrakingStrengthMaxLimit_PhidgetsUnits_FromDevice: " + str(self.BrakingStrengthMaxLimit_PhidgetsUnits_FromDevice))
-                ############################
+                #########################################################
 
             except PhidgetException as e:
+
+                #########################################################
                 print("Failed to motor limits, Phidget Exception %i: %s" % (e.code, e.details))
                 traceback.print_exc()
                 return
-
-            self.MostRecentDataDict = dict([("Position_PhidgetsUnits_FromDevice", self.Position_PhidgetsUnits_FromDevice),
-                                            ("Velocity_PhidgetsUnits_FromDevice", self.Velocity_PhidgetsUnits_FromDevice),
-                                            ("Velocity_PhidgetsUnits_DifferentiatedRaw", self.Velocity_PhidgetsUnits_DifferentiatedRaw),
-                                            ("Velocity_PhidgetsUnits_DifferentiatedSmoothed", self.Velocity_PhidgetsUnits_DifferentiatedSmoothed),
-                                            ("DutyCycle_PhidgetsUnits_FromDevice", self.DutyCycle_PhidgetsUnits_FromDevice),
-                                            ("Temperature_DegC_FromDevice", self.Temperature_DegC_FromDevice),
-                                            ("Time", self.CurrentTime_CalculatedFromMainThread)])
+                #########################################################
 
             #########################################################
+            #########################################################
 
-            ##########################################
+            #########################################################
+            #########################################################
+            try:
+                self.DataStreamingFrequency_CalculatedFromMainThread_LowPassFilter_ReubenPython2and3ClassObject = LowPassFilter_ReubenPython2and3Class(dict([("UseMedianFilterFlag", 1),
+                                                                                                                ("UseExponentialSmoothingFilterFlag", 1),
+                                                                                                                ("ExponentialSmoothingFilterLambda", 0.05)])) ##new_filtered_value = k * raw_sensor_value + (1 - k) * old_filtered_value
+
+            except:
+                exceptions = sys.exc_info()[0]
+                print("ArucoTagDetectionFromCameraFeed_ReubenPython3Class __init__: DataStreamingFrequency_CalculatedFromMainThread_LowPassFilter_ReubenPython2and3ClassObject, Exceptions: %s" % exceptions)
+                traceback.print_exc()
+                return
+            #########################################################
+            #########################################################
+
+            #########################################################
+            #########################################################
             self.MainThread_ThreadingObject = threading.Thread(target=self.MainThread, args=())
             self.MainThread_ThreadingObject.start()
-            ##########################################
+            #########################################################
+            #########################################################
 
-            ##########################################
+            #########################################################
+            #########################################################
             if self.USE_GUI_FLAG == 1:
                 self.StartGUI(self.root)
-            ##########################################
+            #########################################################
+            #########################################################
 
+            #########################################################
+            #########################################################
+            time.sleep(0.25)
+            #########################################################
+            #########################################################
+
+            #########################################################
+            #########################################################
             self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 1
+            #########################################################
+            #########################################################
 
+        #########################################################
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
+        #########################################################
         else:
             print("---------- Failed to open PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class for serial number " + str(self.VINT_DesiredSerialNumber) + " ----------")
-            self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
-            return
+        #########################################################
+        #########################################################
+        #########################################################
+
     ##########################################################################################################
     ##########################################################################################################
 
@@ -938,6 +1048,21 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     def __del__(self):
         pass
+    ##########################################################################################################
+    ##########################################################################################################
+
+    ##########################################################################################################
+    ##########################################################################################################
+    def CloseAllPhidgetObjects(self):
+
+        try:
+
+            self.TemperatureObject.close()
+            self.BLDCobject.close()
+
+        except PhidgetException as e:
+            print("CloseAllPhidgetObjects, Phidget Exception %i: %s" % (e.code, e.details))
+
     ##########################################################################################################
     ##########################################################################################################
 
@@ -1128,11 +1253,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                 self.ThisIsFirstTimeEverAttachingFlag = 1
             ##############################
 
-            self.device_connected_flag = 1
+            self.PhidgetsDeviceConnectedFlag = 1
             self.MyPrint_WithoutLogFile("$$$$$$$$$$ BLDConAttachCallback Attached Event! $$$$$$$$$$")
 
         except PhidgetException as e:
-            self.device_connected_flag = 0
+            self.PhidgetsDeviceConnectedFlag = 0
             self.MyPrint_WithoutLogFile("BLDConAttachCallback ERROR: Failed to initialize the BLDC, Phidget Exception %i: %s" % (e.code, e.details))
     ##########################################################################################################
     ##########################################################################################################
@@ -1140,7 +1265,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     ##########################################################################################################
     def BLDConDetachCallback(self, HandlerSelf):
-        self.device_connected_flag = 0
+        self.PhidgetsDeviceConnectedFlag = 0
 
         self.MyPrint_WithoutLogFile("$$$$$$$$$$ BLDConDetachCallback Detached Event! $$$$$$$$$$")
 
@@ -1173,9 +1298,9 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         self.CurrentTime_OnPositionChangeCallbackFunction = self.getPreciseSecondsTimeStampString()
         self.UpdateFrequencyCalculation_OnPositionChangeCallbackFunction()
 
-        self.Velocity_PhidgetsUnits_DifferentiatedRaw = (self.Position_PhidgetsUnits_FromDevice - self.Position_PhidgetsUnits_FromDevice_Last)/(self.DataStreamingDeltaT_OnPositionChangeCallbackFunction)
-
-        self.Velocity_PhidgetsUnits_DifferentiatedSmoothed = self.Velocity_LowPassFilter_ReubenPython2and3ClassObject.AddDataPointFromExternalProgram(self.Velocity_PhidgetsUnits_DifferentiatedRaw)["SignalOutSmoothed"]
+        if self.DataStreamingDeltaT_OnPositionChangeCallbackFunction > 0:
+            self.Velocity_PhidgetsUnits_DifferentiatedRaw = (self.Position_PhidgetsUnits_FromDevice - self.Position_PhidgetsUnits_FromDevice_Last)/(self.DataStreamingDeltaT_OnPositionChangeCallbackFunction)
+            self.Velocity_PhidgetsUnits_DifferentiatedSmoothed = self.Velocity_LowPassFilter_ReubenPython2and3ClassObject.AddDataPointFromExternalProgram(self.Velocity_PhidgetsUnits_DifferentiatedRaw)["SignalOutSmoothed"]
 
         self.Position_PhidgetsUnits_FromDevice_Last = self.Position_PhidgetsUnits_FromDevice
 
@@ -1267,18 +1392,19 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
     ##########################################################################################################
     ##########################################################################################################
-    def UpdateFrequencyCalculation_MainThread(self):
+    def UpdateFrequencyCalculation_MainThread_Filtered(self):
 
         try:
             self.DataStreamingDeltaT_CalculatedFromMainThread = self.CurrentTime_CalculatedFromMainThread - self.LastTime_CalculatedFromMainThread
 
             if self.DataStreamingDeltaT_CalculatedFromMainThread != 0.0:
-                self.DataStreamingFrequency_CalculatedFromMainThread = 1.0/self.DataStreamingDeltaT_CalculatedFromMainThread
+                DataStreamingFrequency_CalculatedFromMainThread_TEMP = 1.0/self.DataStreamingDeltaT_CalculatedFromMainThread
+                self.DataStreamingFrequency_CalculatedFromMainThread = self.DataStreamingFrequency_CalculatedFromMainThread_LowPassFilter_ReubenPython2and3ClassObject.AddDataPointFromExternalProgram(DataStreamingFrequency_CalculatedFromMainThread_TEMP)["SignalOutSmoothed"]
 
             self.LastTime_CalculatedFromMainThread = self.CurrentTime_CalculatedFromMainThread
         except:
             exceptions = sys.exc_info()[0]
-            print("UpdateFrequencyCalculation_MainThread ERROR with Exceptions: %s" % exceptions)
+            print("UpdateFrequencyCalculation_MainThread_Filtered, Exceptions: %s" % exceptions)
             traceback.print_exc()
     ##########################################################################################################
     ##########################################################################################################
@@ -1318,7 +1444,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         ######################
 
         ######################
-        self.Position_PhidgetsUnits_TO_BE_SET = self.limitNumber(self.PositionMinLimit_PhidgetsUnits_UserSet, self.PositionMaxLimit_PhidgetsUnits_UserSet, commanded_position_PhidgetsUnits)
+        self.Position_PhidgetsUnits_TO_BE_SET = self.LimitNumber_FloatOutputOnly(self.PositionMinLimit_PhidgetsUnits_UserSet, self.PositionMaxLimit_PhidgetsUnits_UserSet, commanded_position_PhidgetsUnits)
         self.Position_PhidgetsUnits_NeedsToBeChangedFlag = 1
         self.Position_PhidgetsUnits_GUI_NeedsToBeChangedFlag = 1
         ######################
@@ -1326,7 +1452,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         ######################
         if commanded_velocity_limit_PhidgetsUnits != -11111.0:
             if commanded_velocity_limit_PhidgetsUnits != self.Velocity_PhidgetsUnits_TO_BE_SET:
-                self.Velocity_PhidgetsUnits_TO_BE_SET = self.limitNumber(self.VelocityMinLimit_PhidgetsUnits_UserSet, self.VelocityMaxLimit_PhidgetsUnits_UserSet, commanded_velocity_limit_PhidgetsUnits)
+                self.Velocity_PhidgetsUnits_TO_BE_SET = self.LimitNumber_FloatOutputOnly(self.VelocityMinLimit_PhidgetsUnits_UserSet, self.VelocityMaxLimit_PhidgetsUnits_UserSet, commanded_velocity_limit_PhidgetsUnits)
                 self.Velocity_PhidgetsUnits_NeedsToBeChangedFlag = 1
                 self.Velocity_PhidgetsUnits_GUI_NeedsToBeChangedFlag = 1
         ######################
@@ -1351,7 +1477,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         ######################
 
         ######################
-        self.Velocity_PhidgetsUnits_TO_BE_SET = self.limitNumber(self.VelocityMinLimit_PhidgetsUnits_UserSet, self.VelocityMaxLimit_PhidgetsUnits_UserSet, commanded_velocity_PhidgetsUnits)
+        self.Velocity_PhidgetsUnits_TO_BE_SET = self.LimitNumber_FloatOutputOnly(self.VelocityMinLimit_PhidgetsUnits_UserSet, self.VelocityMaxLimit_PhidgetsUnits_UserSet, commanded_velocity_PhidgetsUnits)
         self.Velocity_PhidgetsUnits_NeedsToBeChangedFlag = 1
         self.Velocity_PhidgetsUnits_GUI_NeedsToBeChangedFlag = 1
         ######################
@@ -1380,7 +1506,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     def SetPositionOffsetOnBoardWithoutMoving(self, commanded_position_offset_value_PhidgetsUnits):
 
-        commanded_position_offset_value_PhidgetsUnits_LIMITED = self.limitNumber(self.PositionMinLimit_PhidgetsUnits_UserSet, self.PositionMaxLimit_PhidgetsUnits_UserSet, commanded_position_offset_value_PhidgetsUnits)
+        commanded_position_offset_value_PhidgetsUnits_LIMITED = self.LimitNumber_FloatOutputOnly(self.PositionMinLimit_PhidgetsUnits_UserSet, self.PositionMaxLimit_PhidgetsUnits_UserSet, commanded_position_offset_value_PhidgetsUnits)
 
         try:
             self.BLDCobject.addPositionOffset(commanded_position_offset_value_PhidgetsUnits_LIMITED)
@@ -1394,8 +1520,8 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     ##########################################################################################################
 
-    ##########################################################################################################
     ########################################################################################################## unicorn
+    ##########################################################################################################
     def HomeMotorInPlace(self):
 
         Position_PhidgetsUnits_FromDevice_JUST_QUERIED = self.BLDCobject.getPosition()
@@ -1418,9 +1544,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     ##########################################################################################################
 
+    ########################################################################################################## unicorn
     ##########################################################################################################
     ##########################################################################################################
-    def MainThread(self): #unicorn
+    ##########################################################################################################
+    def MainThread(self):
 
         self.MyPrint_WithoutLogFile("Started MainThread for PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class.")
 
@@ -1432,36 +1560,42 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         self.StartingTime_CalculatedFromMainThread = self.getPreciseSecondsTimeStampString()
 
-        ###############################################
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
         while self.EXIT_PROGRAM_FLAG == 0:
 
-            ###############################################
+            ##########################################################################################################
+            ##########################################################################################################
             self.CurrentTime_CalculatedFromMainThread = self.getPreciseSecondsTimeStampString() - self.StartingTime_CalculatedFromMainThread
-            ###############################################
+            ##########################################################################################################
+            ##########################################################################################################
 
-            ###############################################
+            ##########################################################################################################
+            ##########################################################################################################
             if self.CurrentTime_CalculatedFromMainThread - self.LastTime_FailsafeWasReset >= 0.5*self.FailsafeTime_Milliseconds/1000.0: #IF YOU CALL resetFailsafe every PID loop, it'll kill your loop frequency
                 #self.MyPrint_WithoutLogFile("RESET FAILSAFE AT TIME = " + str(self.CurrentTime_CalculatedFromMainThread))
                 self.BLDCobject.resetFailsafe() #resetFailsafe is faster than enableFailsafe
                 self.LastTime_FailsafeWasReset = self.CurrentTime_CalculatedFromMainThread
-            ###############################################
+            ##########################################################################################################
+            ##########################################################################################################
 
-            ###############################################
-            ############################################### Start SETs
+            ########################################################################################################## Start SETs
+            ##########################################################################################################
 
-            ###############################################
+            ##########################################################################################################
             if self.StopMotor_NeedsToBeChangedFlag == 1:
                 self.StopMotor()
                 self.StopMotor_NeedsToBeChangedFlag = 0
-            ###############################################
+            ##########################################################################################################
 
-            ###############################################
+            ##########################################################################################################
             if self.HomeMotorInPlace_NeedsToBeHomedFlag == 1:
                 self.HomeMotorInPlace()
                 self.HomeMotorInPlace_NeedsToBeHomedFlag = 0
-            ###############################################
+            ##########################################################################################################
 
-            ###############################################
+            ##########################################################################################################
             if self.EngagedState_NeedsToBeChangedFlag == 1 and self.ControlMode == "position":
                 try:
                     #self.MyPrint_WithoutLogFile("Sending Engaged State to the Phidget.")
@@ -1470,25 +1604,25 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                         self.EngagedState_NeedsToBeChangedFlag = 0
                 except:
                     self.MyPrint_WithoutLogFile("ERROR: Failed to change EngagedState!")
-            ###############################################
+            ##########################################################################################################
 
-            ############################################### Tx portion
+            ########################################################################################################## Tx portion
             if self.Position_PhidgetsUnits_NeedsToBeChangedFlag == 1 and self.ControlMode == "position":
                 try:
                     #self.MyPrint_WithoutLogFile("Sending Position to the Phidget, value of " + str(self.Position_PhidgetsUnits_TO_BE_SET))
-                    self.Position_PhidgetsUnits_TO_BE_SET = self.limitNumber(self.PositionMinLimit_PhidgetsUnits_UserSet, self.PositionMaxLimit_PhidgetsUnits_UserSet, self.Position_PhidgetsUnits_TO_BE_SET)
+                    self.Position_PhidgetsUnits_TO_BE_SET = self.LimitNumber_FloatOutputOnly(self.PositionMinLimit_PhidgetsUnits_UserSet, self.PositionMaxLimit_PhidgetsUnits_UserSet, self.Position_PhidgetsUnits_TO_BE_SET)
                     self.BLDCobject.setTargetPosition(float(self.Position_PhidgetsUnits_TO_BE_SET))
                     self.Position_PhidgetsUnits_NeedsToBeChangedFlag = 0
 
                 except PhidgetException as e:
                     self.MyPrint_WithoutLogFile("Failed setTargetPosition, Phidget Exception %i: %s" % (e.code, e.details))
-            ###############################################
+            ##########################################################################################################
 
-            ###############################################
+            ##########################################################################################################
             if self.Velocity_PhidgetsUnits_NeedsToBeChangedFlag == 1:
                 try:
                     #self.MyPrint_WithoutLogFile("Sending Velocity to the Phidget.")
-                    self.Velocity_PhidgetsUnits_TO_BE_SET = self.limitNumber(self.VelocityMinLimit_PhidgetsUnits_UserSet, self.VelocityMaxLimit_PhidgetsUnits_UserSet, self.Velocity_PhidgetsUnits_TO_BE_SET)
+                    self.Velocity_PhidgetsUnits_TO_BE_SET = self.LimitNumber_FloatOutputOnly(self.VelocityMinLimit_PhidgetsUnits_UserSet, self.VelocityMaxLimit_PhidgetsUnits_UserSet, self.Velocity_PhidgetsUnits_TO_BE_SET)
 
                     if self.ControlMode == "position":
                         self.BLDCobject.setVelocityLimit(float(self.Velocity_PhidgetsUnits_TO_BE_SET))
@@ -1500,25 +1634,25 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
                 except PhidgetException as e:
                     self.MyPrint_WithoutLogFile("Failed setVelocityLimit, Phidget Exception %i: %s" % (e.code, e.details))
-            ###############################################
+            ##########################################################################################################
 
-            ###############################################
+            ##########################################################################################################
             if self.Acceleration_PhidgetsUnits_NeedsToBeChangedFlag == 1:
                 try:
                     #self.MyPrint_WithoutLogFile("Sending Acceleration to the Phidget.")
-                    self.Acceleration_PhidgetsUnits_TO_BE_SET = self.limitNumber(self.AccelerationMinLimit_PhidgetsUnits_FromDevice, self.AccelerationMaxLimit_PhidgetsUnits_FromDevice, self.Acceleration_PhidgetsUnits_TO_BE_SET)
+                    self.Acceleration_PhidgetsUnits_TO_BE_SET = self.LimitNumber_FloatOutputOnly(self.AccelerationMinLimit_PhidgetsUnits_FromDevice, self.AccelerationMaxLimit_PhidgetsUnits_FromDevice, self.Acceleration_PhidgetsUnits_TO_BE_SET)
                     self.BLDCobject.setAcceleration(float(self.Acceleration_PhidgetsUnits_TO_BE_SET))
                     self.Acceleration_PhidgetsUnits_NeedsToBeChangedFlag = 0
 
                 except PhidgetException as e:
                     self.MyPrint_WithoutLogFile("Failed setAcceleration, Phidget Exception %i: %s" % (e.code, e.details))
-            ###############################################
+            ##########################################################################################################
 
-            ###############################################
+            ##########################################################################################################
             if self.DeadBand_PosControl_PhidgetsUnits_NeedsToBeChangedFlag == 1 and self.ControlMode == "position":
                 try:
                     self.MyPrint_WithoutLogFile("Sending DeadBand to the Phidget, value = " + str(self.DeadBand_PosControl_PhidgetsUnits_TO_BE_SET))
-                    self.DeadBand_PosControl_PhidgetsUnits_TO_BE_SET = self.limitNumber(0, self.PositionMaxLimit_PhidgetsUnits_UserSet, self.DeadBand_PosControl_PhidgetsUnits_TO_BE_SET) #Limit to max position since DeadBand is in position units
+                    self.DeadBand_PosControl_PhidgetsUnits_TO_BE_SET = self.LimitNumber_FloatOutputOnly(0, self.PositionMaxLimit_PhidgetsUnits_UserSet, self.DeadBand_PosControl_PhidgetsUnits_TO_BE_SET) #Limit to max position since DeadBand is in position units
                     self.BLDCobject.setDeadBand(float(self.DeadBand_PosControl_PhidgetsUnits_TO_BE_SET))
                     #time.sleep(0.001)
                     self.DeadBand_PosControl_PhidgetsUnits_FromDevice = self.BLDCobject.getDeadBand()
@@ -1528,13 +1662,13 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
                 except PhidgetException as e:
                     self.MyPrint_WithoutLogFile("Failed setTargetDeadBand, Phidget Exception %i: %s" % (e.code, e.details))
-            ###############################################
+            ##########################################################################################################
 
-            ###############################################
-            ############################################### End SETs
+            ##########################################################################################################
+            ########################################################################################################## End SETs
 
-            ###############################################
-            ############################################### Start GETs
+            ########################################################################################################## Start GETs
+            ##########################################################################################################
             if self.ControlMode == "position":
                 self.EngagedState_PhidgetsUnits_FromDevice = self.BLDCobject.getEngaged() #NOT INCLUDING UNDER ENABLE_GETS_MAINTHREAD BECAUSE THIS IS CRITICAL TO FUNCTIONALITY
 
@@ -1546,37 +1680,38 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                 if self.ControlMode == "position":
                     self.DeadBand_PosControl_PhidgetsUnits_FromDevice = self.BLDCobject.getDeadBand()
                     #print(self.DeadBand_PosControl_PhidgetsUnits_FromDevice)
-            ###############################################
-            ############################################### End GETs
+            ##########################################################################################################
+            ########################################################################################################## End GETs
 
-            ###############################################
-            self.MostRecentDataDict = dict([("Position_PhidgetsUnits_FromDevice", self.Position_PhidgetsUnits_FromDevice),
-                                            ("Velocity_PhidgetsUnits_FromDevice", self.Velocity_PhidgetsUnits_FromDevice),
-                                            ("Velocity_PhidgetsUnits_DifferentiatedRaw", self.Velocity_PhidgetsUnits_DifferentiatedRaw),
-                                            ("Velocity_PhidgetsUnits_DifferentiatedSmoothed", self.Velocity_PhidgetsUnits_DifferentiatedSmoothed),
-                                            ("DutyCycle_PhidgetsUnits_FromDevice", self.DutyCycle_PhidgetsUnits_FromDevice),
-                                            ("Temperature_DegC_FromDevice", self.Temperature_DegC_FromDevice),
-                                            ("Time", self.CurrentTime_CalculatedFromMainThread)])
-            ###############################################
-
-            ############################################### USE THE TIME.SLEEP() TO SET THE LOOP FREQUENCY
-            ###############################################
-            ###############################################
-            self.UpdateFrequencyCalculation_MainThread()
+            ##########################################################################################################
+            ##########################################################################################################
+            self.UpdateFrequencyCalculation_MainThread_Filtered()
 
             if self.MainThread_TimeToSleepEachLoop > 0.0:
-                time.sleep(self.MainThread_TimeToSleepEachLoop)
+                if self.MainThread_TimeToSleepEachLoop > 0.001:
+                    time.sleep(self.MainThread_TimeToSleepEachLoop - 0.001) #The "- 0.001" corrects for slight deviation from intended frequency due to other functions being called.
+                else:
+                    time.sleep(self.MainThread_TimeToSleepEachLoop)
+            ##########################################################################################################
+            ##########################################################################################################
 
-            ###############################################
-            ###############################################
-            ###############################################
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
 
-        ###############################################
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        self.CloseAllPhidgetObjects()
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
 
         self.MyPrint_WithoutLogFile("Finished the MainThread for PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class object.")
         self.MainThread_still_running_flag = 0
 
-        return 0
+    ##########################################################################################################
+    ##########################################################################################################
     ##########################################################################################################
     ##########################################################################################################
 
@@ -1584,7 +1719,20 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     def GetMostRecentDataDict(self):
 
-        return self.MostRecentDataDict
+        if self.EXIT_PROGRAM_FLAG == 0:
+
+            self.MostRecentDataDict = dict([("Position_PhidgetsUnits_FromDevice", self.Position_PhidgetsUnits_FromDevice),
+                                            ("Velocity_PhidgetsUnits_FromDevice", self.Velocity_PhidgetsUnits_FromDevice),
+                                            ("Velocity_PhidgetsUnits_DifferentiatedRaw", self.Velocity_PhidgetsUnits_DifferentiatedRaw),
+                                            ("Velocity_PhidgetsUnits_DifferentiatedSmoothed", self.Velocity_PhidgetsUnits_DifferentiatedSmoothed),
+                                            ("DutyCycle_PhidgetsUnits_FromDevice", self.DutyCycle_PhidgetsUnits_FromDevice),
+                                            ("Temperature_DegC_FromDevice", self.Temperature_DegC_FromDevice),
+                                            ("Time", self.CurrentTime_CalculatedFromMainThread)])
+
+            return deepcopy(self.MostRecentDataDict) #deepcopy IS required as MostRecentDataDict contains lists.
+
+        else:
+            return dict() #So that we're not returning variables during the close-down process.
     ##########################################################################################################
     ##########################################################################################################
 
@@ -1603,9 +1751,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     def StartGUI(self, GuiParent=None):
 
-        GUI_Thread_ThreadingObject = threading.Thread(target=self.GUI_Thread, args=(GuiParent,))
-        GUI_Thread_ThreadingObject.setDaemon(True) #Should mean that the GUI thread is destroyed automatically when the main thread is destroyed.
-        GUI_Thread_ThreadingObject.start()
+        #GUI_Thread_ThreadingObject = threading.Thread(target=self.GUI_Thread, args=(GuiParent,))
+        #GUI_Thread_ThreadingObject.setDaemon(True) #Should mean that the GUI thread is destroyed automatically when the main thread is destroyed.
+        #GUI_Thread_ThreadingObject.start()
+
+        self.GUI_Thread(GuiParent)
     ##########################################################################################################
     ##########################################################################################################
 
@@ -1615,23 +1765,15 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         print("Starting the GUI_Thread for PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class object.")
 
-        ###################################################
-        if parent == None:  #This class object owns root and must handle it properly
-            self.root = Tk()
-            self.parent = self.root
+        ###########################################################
+        ###########################################################
+        self.root = parent
+        self.parent = parent
+        ###########################################################
+        ###########################################################
 
-            ################################################### SET THE DEFAULT FONT FOR ALL WIDGETS CREATED AFTTER/BELOW THIS CALL
-            default_font = tkFont.nametofont("TkDefaultFont")
-            default_font.configure(size=8)
-            self.root.option_add("*Font", default_font)
-            ###################################################
-
-        else:
-            self.root = parent
-            self.parent = parent
-        ###################################################
-
-        ###################################################
+        ###########################################################
+        ###########################################################
         self.myFrame = Frame(self.root)
 
         if self.UseBorderAroundThisGuiObjectFlag == 1:
@@ -1645,42 +1787,44 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                           rowspan = self.GUI_ROWSPAN,
                           columnspan= self.GUI_COLUMNSPAN,
                           sticky = self.GUI_STICKY)
-        ###################################################
+        ###########################################################
+        ###########################################################
 
-        ###################################################
+        ###########################################################
+        ###########################################################
         self.TKinter_LightGreenColor = '#%02x%02x%02x' % (150, 255, 150) #RGB
         self.TKinter_LightRedColor = '#%02x%02x%02x' % (255, 150, 150) #RGB
         self.TKinter_LightYellowColor = '#%02x%02x%02x' % (255, 255, 150)  # RGB
         self.TKinter_DefaultGrayColor = '#%02x%02x%02x' % (240, 240, 240)  # RGB
         self.TkinterScaleWidth = 10
         self.TkinterScaleLength = 250
-        ###################################################
+        ###########################################################
+        ###########################################################
 
-        ###################################################
-        self.device_info_label = Label(self.myFrame, text="Device Info", width=75)
+        ###########################################################
+        ###########################################################
+        self.DeviceInfo_Label = Label(self.myFrame, text="Device Info", width=75)
 
-        self.device_info_label["text"] = self.NameToDisplay_UserSet + \
+        self.DeviceInfo_Label["text"] = self.NameToDisplay_UserSet + \
                                          "\nDevice Name: " + self.DetectedDeviceName + \
                                          "\nVINT SerialNumber: " + str(self.VINT_DetectedSerialNumber) + \
                                          "\nDeviceID: " + str(self.DetectedDeviceID) + \
                                          "\nFW Ver: " + str(self.DetectedDeviceVersion) + \
                                          "\nLibrary Ver: " + str(self.DetectedDeviceLibraryVersion)
 
-        self.device_info_label.grid(row=0, column=0, padx=1, pady=1, columnspan=1, rowspan=1)
-        ###################################################
+        self.DeviceInfo_Label.grid(row=0, column=0, padx=1, pady=1, columnspan=1, rowspan=1)
+        ###########################################################
+        ###########################################################
 
-        ###################################################
-        self.data_label = Label(self.myFrame, text="Data Info", width=75)
-        self.data_label.grid(row=1, column=0, padx=1, pady=1, columnspan=1, rowspan=1)
-        ###################################################
+        ###########################################################
+        ###########################################################
+        self.Data_Label = Label(self.myFrame, text="Data Info", width=75)
+        self.Data_Label.grid(row=1, column=0, padx=1, pady=1, columnspan=1, rowspan=1)
+        ###########################################################
+        ###########################################################
 
-        ########################
-        self.PrintToGui_Label = Label(self.myFrame, text="PrintToGui_Label", width=75)
-        if self.EnableInternal_MyPrint_Flag == 1:
-            self.PrintToGui_Label.grid(row=2, column=0, padx=1, pady=1, columnspan=1, rowspan=10)
-        ########################
-
-        #################################################
+        ###########################################################
+        ###########################################################
         self.Position_PhidgetsUnits_ScaleLabel = Label(self.myFrame, text="Position", width=20)
         self.Position_PhidgetsUnits_ScaleLabel.grid(row=1, column=1, padx=1, pady=1, columnspan=1, rowspan=1)
 
@@ -1695,7 +1839,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                                             showvalue=1,\
                                             width=self.TkinterScaleWidth,\
                                             length=self.TkinterScaleLength,\
-                                            resolution=0.1,\
+                                            resolution=1.0,\
                                             variable=self.Position_PhidgetsUnits_ScaleValue)
         self.Position_PhidgetsUnits_Scale.bind('<Button-1>', lambda event, name="Position": self.Position_PhidgetsUnits_ScaleResponse(event, name)) #Use both '<Button-1>' or '<ButtonRelease-1>'
         self.Position_PhidgetsUnits_Scale.bind('<B1-Motion>', lambda event, name="Position": self.Position_PhidgetsUnits_ScaleResponse(event, name))
@@ -1705,9 +1849,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         if self.ControlMode == "velocity":
             self.Position_PhidgetsUnits_Scale["state"] = "disabled"
-        #################################################
+        ###########################################################
+        ###########################################################
 
-        #################################################
+        ###########################################################
+        ###########################################################
         self.Velocity_PhidgetsUnits_ScaleLabel = Label(self.myFrame, text="Velocity", width=20)
         self.Velocity_PhidgetsUnits_ScaleLabel.grid(row=2, column=1, padx=1, pady=1, columnspan=1, rowspan=1)
 
@@ -1721,7 +1867,7 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                                             showvalue=1,\
                                             width=self.TkinterScaleWidth,\
                                             length=self.TkinterScaleLength,\
-                                            resolution=0.001,\
+                                            resolution=0.01,\
                                             variable=self.Velocity_PhidgetsUnits_ScaleValue)
         self.Velocity_PhidgetsUnits_Scale.bind('<Button-1>', lambda event, name="Velocity": self.Velocity_PhidgetsUnits_ScaleResponse(event, name)) #Use both '<Button-1>' or '<ButtonRelease-1>'
         self.Velocity_PhidgetsUnits_Scale.bind('<B1-Motion>', lambda event, name="Velocity": self.Velocity_PhidgetsUnits_ScaleResponse(event, name))
@@ -1735,9 +1881,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         #    self.Velocity_PhidgetsUnits_Scale["state"] = "disabled"
         #elif self.ControlMode == "velocity":
         #    self.Velocity_PhidgetsUnits_Scale["troughcolor"] = self.TKinter_LightGreenColor
-        #################################################
+        ###########################################################
+        ###########################################################
 
-        #################################################
+        ###########################################################
+        ###########################################################
         self.Acceleration_PhidgetsUnits_ScaleLabel = Label(self.myFrame, text="Acceleration", width=20)
         self.Acceleration_PhidgetsUnits_ScaleLabel.grid(row=3, column=1, padx=1, pady=1, columnspan=1, rowspan=1)
 
@@ -1763,9 +1911,11 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
             pass #Color gets controlled by engaged flag within the main GUI loop
         elif self.ControlMode == "velocity":
             self.Acceleration_PhidgetsUnits_Scale["troughcolor"] = self.TKinter_LightGreenColor
-        #################################################
+        ###########################################################
+        ###########################################################
 
-        #################################################
+        ###########################################################
+        ###########################################################
         self.DeadBand_PosControl_PhidgetsUnits_ScaleLabel = Label(self.myFrame, text="DeadBand", width=20)
         self.DeadBand_PosControl_PhidgetsUnits_ScaleLabel.grid(row=4, column=1, padx=1, pady=1, columnspan=1, rowspan=1)
 
@@ -1790,45 +1940,8 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
         if self.ControlMode == "velocity":
             self.DeadBand_PosControl_PhidgetsUnits_Scale["state"] = "disabled"
-        #################################################
-
-        '''
         ###########################################################
         ###########################################################
-        self.Entry_Width = 15
-        self.Entry_Label_Width = 15
-        self.Entry_FontSize = 8
-        self.AllEntriesFrame = Frame(self.myFrame)
-        self.AllEntriesFrame["borderwidth"] = 2
-        #self.AllEntriesFrame["relief"] = "ridge"
-        self.AllEntriesFrame.grid(row=2, column=0, padx=1, pady=1, columnspan=10, rowspan=1, sticky="W")
-        ###########################################################
-        ###########################################################
-
-        ###########################################################
-        ###########################################################
-        self.VelocityMaxLimit_PhidgetsUnits_label = Label(self.AllEntriesFrame, text="VelocityMax", width=self.Entry_Label_Width)
-        self.VelocityMaxLimit_PhidgetsUnits_label.grid(row=0, column=0, padx=1, pady=1, columnspan=1, rowspan=1)
-
-        self.VelocityMaxLimit_PhidgetsUnits_StringVar = StringVar()
-        self.VelocityMaxLimit_PhidgetsUnits_StringVar.set(self.VelocityMaxLimit_PhidgetsUnits_UserSet)
-
-        self.VelocityMaxLimit_PhidgetsUnits_TextInputBox = Entry(self.AllEntriesFrame,
-                                            font=("Helvetica", int(self.Entry_FontSize)),
-                                            state="normal",
-                                            width=int(self.Entry_Width),
-                                            textvariable=self.VelocityMaxLimit_PhidgetsUnits_StringVar,
-                                            justify='center')
-
-        self.VelocityMaxLimit_PhidgetsUnits_TextInputBox.bind('<Return>', lambda event, name = "<Return>": self.VelocityMaxLimit_PhidgetsUnits_TextInputBoxResponse(event, name))
-        #self.VelocityMaxLimit_PhidgetsUnits_TextInputBox.bind('<Button-1>', lambda event, name = "<Button-1>": self.VelocityMaxLimit_PhidgetsUnits_TextInputBoxResponse(event, name))
-        #self.VelocityMaxLimit_PhidgetsUnits_TextInputBox.bind('<Button-2>', lambda event, name = "<Button-2>": self.VelocityMaxLimit_PhidgetsUnits_TextInputBoxResponse(event, name))
-        #self.VelocityMaxLimit_PhidgetsUnits_TextInputBox.bind('<Button-3>', lambda event, name = "<Button-3>": self.VelocityMaxLimit_PhidgetsUnits_TextInputBoxResponse(event, name))
-        #self.VelocityMaxLimit_PhidgetsUnits_TextInputBox.bind('<Leave>', lambda event, name = "<Leave>": self.VelocityMaxLimit_PhidgetsUnits_TextInputBoxResponse(event, name))
-        self.VelocityMaxLimit_PhidgetsUnits_TextInputBox.grid(row=1, column=0, padx=0, pady=0, columnspan=1, rowspan=1)
-        ###########################################################
-        ###########################################################
-        '''
 
         ###########################################################
         ###########################################################
@@ -1869,22 +1982,19 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
         ###########################################################
         ###########################################################
 
-        ########################
-        if self.RootIsOwnedExternallyFlag == 0: #This class object owns root and must handle it properly
-            self.root.protocol("WM_DELETE_WINDOW", self.ExitProgram_Callback)
+        ###########################################################
+        ###########################################################
+        self.PrintToGui_Label = Label(self.myFrame, text="PrintToGui_Label", width=75)
+        if self.EnableInternal_MyPrint_Flag == 1:
+            self.PrintToGui_Label.grid(row=2, column=0, padx=1, pady=1, columnspan=1, rowspan=10)
+        ###########################################################
+        ###########################################################
 
-            self.root.after(self.GUI_RootAfterCallbackInterval_Milliseconds, self.GUI_update_clock)
-            self.GUI_ready_to_be_updated_flag = 1
-            self.root.mainloop()
-        else:
-            self.GUI_ready_to_be_updated_flag = 1
-        ########################
-
-        ########################
-        if self.RootIsOwnedExternallyFlag == 0: #This class object owns root and must handle it properly
-            self.root.quit()  # Stop the GUI thread, MUST BE CALLED FROM GUI_Thread
-            self.root.destroy()  # Close down the GUI thread, MUST BE CALLED FROM GUI_Thread
-        ########################
+        ###########################################################
+        ###########################################################
+        self.GUI_ready_to_be_updated_flag = 1
+        ###########################################################
+        ###########################################################
 
     ##########################################################################################################
     ##########################################################################################################
@@ -1977,34 +2087,6 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
     ##########################################################################################################
     ##########################################################################################################
 
-    '''
-    ##########################################################################################################
-    ##########################################################################################################
-    def VelocityMaxLimit_PhidgetsUnits_TextInputBoxResponse(self, event=None, name="default"):
-
-        try:
-            if name == "<Button-1>" or name == "<Button-2>" or name == "<Button-3>" or name == "<Leave>":
-                pass
-
-            elif name == "<Return>":  # When user hits 'Return'
-                VelocityMaxLimit_PhidgetsUnits_UserSet_temp = float(self.VelocityMaxLimit_PhidgetsUnits_StringVar.get())
-                self.VelocityMaxLimit_PhidgetsUnits_UserSet = self.LimitNumber_StringVarObject(
-                    -1.0 * self.VelocityMaxLimit_PhidgetsUnits_FromDevice,
-                    self.VelocityMaxLimit_PhidgetsUnits_FromDevice,
-                    VelocityMaxLimit_PhidgetsUnits_UserSet_temp,
-                    self.VelocityMaxLimit_PhidgetsUnits_StringVar)
-                self.MyPrint_WithoutLogFile("VelocityMaxLimit_PhidgetsUnits_TextInputBoxResponse 'Return' event: \n" + str(
-                    self.VelocityMaxLimit_PhidgetsUnits_UserSet))
-
-                self.Velocity_PhidgetsUnits_TO_BE_SET = self.VelocityMaxLimit_PhidgetsUnits_UserSet
-                self.Velocity_PhidgetsUnits_NeedsToBeChangedFlag = 1
-        except:
-            pass
-
-    ##########################################################################################################
-    ##########################################################################################################
-    '''
-
     ##########################################################################################################
     ##########################################################################################################
     def GUI_update_clock(self):
@@ -2070,13 +2152,15 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                     #########################################################
 
                     #######################################################
-                    self.data_label["text"] =  "*** ControlMode: " + self.ControlMode + " ***" +\
+                    self.Data_Label["text"] =  "*** ControlMode: " + self.ControlMode + " ***" +\
                                                 "\nTime: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.CurrentTime_CalculatedFromMainThread, 0, 3) + \
                                                "\nFrequency MainThread(Hz): " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.DataStreamingFrequency_CalculatedFromMainThread, 0, 3) + \
                                                 "\nFrequency Phidgets ON CHANGE Position Rx, can slow to 0 (Hz): " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.DataStreamingFrequency_OnPositionChangeCallbackFunction, 0, 3) + \
                                                 "\nTemperature_DegC_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Temperature_DegC_FromDevice, 0, 3) + \
                                                 "\nPosition_PhidgetsUnits_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Position_PhidgetsUnits_FromDevice, 0, 3) + \
                                                 "\nVelocity_PhidgetsUnits_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Velocity_PhidgetsUnits_FromDevice, 0, 3) + \
+                                                "\n\tVelocity_PhidgetsUnits_DifferentiatedRaw: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Velocity_PhidgetsUnits_DifferentiatedRaw, 0, 3) + \
+                                                "\n\tVelocity_PhidgetsUnits_DifferentiatedSmoothed: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Velocity_PhidgetsUnits_DifferentiatedSmoothed, 0, 3) + \
                                                 "\nVelocityStall_PhidgetsUnits_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.VelocityStall_PhidgetsUnits_FromDevice, 0, 3) + \
                                                 "\nDutyCycle_PhidgetsUnits_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.DutyCycle_PhidgetsUnits_FromDevice, 0, 3) + \
                                                 "\nAcceleration_PhidgetsUnits_FromDevice: " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self.Acceleration_PhidgetsUnits_FromDevice, 0, 3) + \
@@ -2096,13 +2180,6 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                 #######################################################
                 #######################################################
 
-                #######################################################
-                #######################################################
-                if self.RootIsOwnedExternallyFlag == 0:  # This class object owns root and must handle it properly
-                    self.root.after(self.GUI_RootAfterCallbackInterval_Milliseconds, self.GUI_update_clock)
-                #######################################################
-                #######################################################
-
             #######################################################
             #######################################################
             #######################################################
@@ -2117,107 +2194,42 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
 
     ##########################################################################################################
     ##########################################################################################################
-    def IsInputList(self, input, print_result_flag = 0):
-
-        result = isinstance(input, list)
-
-        if print_result_flag == 1:
-            self.MyPrint_WithoutLogFile("IsInputList: " + str(result))
-
-        return result
-    ##########################################################################################################
-    ##########################################################################################################
-
-    ##########################################################################################################
-    ##########################################################################################################
-    def ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self, input, number_of_leading_numbers=4, number_of_decimal_places=3):
-        IsListFlag = self.IsInputList(input)
-
-        if IsListFlag == 0:
-            float_number_list = [input]
-        else:
-            float_number_list = list(input)
-
-        float_number_list_as_strings = []
-        for element in float_number_list:
-            try:
-                element = float(element)
-                prefix_string = "{:." + str(number_of_decimal_places) + "f}"
-                element_as_string = prefix_string.format(element)
-                float_number_list_as_strings.append(element_as_string)
-            except:
-                self.MyPrint_WithoutLogFile(self.TellWhichFileWereIn() + ": ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput ERROR: " + str(element) + " cannot be turned into a float")
-                return -1
-
-        StringToReturn = ""
-        if IsListFlag == 0:
-            StringToReturn = float_number_list_as_strings[0].zfill(number_of_leading_numbers + number_of_decimal_places + 1 + 1)  # +1 for sign, +1 for decimal place
-        else:
-            StringToReturn = "["
-            for index, StringElement in enumerate(float_number_list_as_strings):
-                if float_number_list[index] >= 0:
-                    StringElement = "+" + StringElement  # So that our strings always have either + or - signs to maintain the same string length
-
-                StringElement = StringElement.zfill(number_of_leading_numbers + number_of_decimal_places + 1 + 1)  # +1 for sign, +1 for decimal place
-
-                if index != len(float_number_list_as_strings) - 1:
-                    StringToReturn = StringToReturn + StringElement + ", "
-                else:
-                    StringToReturn = StringToReturn + StringElement + "]"
-
-        return StringToReturn
-    ##########################################################################################################
-    ##########################################################################################################
-
-    ##########################################################################################################
-    ##########################################################################################################
-    def limitNumber(self, min_val, max_val, test_val):
-
-        #test_val = float(test_val) #MUST HAVE THIS LINE TO CATCH STRINGS PASSED INTO THE FUNCTION
-
+    def LimitNumber_IntOutputOnly(self, min_val, max_val, test_val):
         if test_val > max_val:
             test_val = max_val
-            #self.MyPrint_WithoutLogFile("limitNumber: input of " + str(test_val) + " was capped at maximum of " + str(max_val) + ".")
+
         elif test_val < min_val:
             test_val = min_val
-            #self.MyPrint_WithoutLogFile("limitNumber: input of " + str(test_val) + " was capped at minimum of " + str(min_val) + ".")
+
         else:
-            dummy_var = 0
-            #self.MyPrint_WithoutLogFile("limitNumber ERROR: input of " + str(test_val) + " triggered the 'else' condition.")
+            test_val = test_val
+
+        test_val = int(test_val)
 
         return test_val
+
     ##########################################################################################################
     ##########################################################################################################
 
     ##########################################################################################################
     ##########################################################################################################
-    def LimitNumber_StringVarObject(self, min_val, max_val, test_val, StringVarObject, number_of_decimal_places = 1):
+    def LimitNumber_FloatOutputOnly(self, min_val, max_val, test_val):
+        if test_val > max_val:
+            test_val = max_val
 
-        try:
-            test_val = float(test_val)
+        elif test_val < min_val:
+            test_val = min_val
 
-            if test_val > max_val:
-                test_val = max_val
-                #self.MyPrint_WithoutLogFile("Original input of " + str(test_val) + " capped at a maximum of " + str(max_val))
-            elif test_val < min_val:
-                test_val = min_val
-                #self.MyPrint_WithoutLogFile("Original input of " + str(test_val) + " capped at a minimum of " + str(min_val))
-            else:
-                test_val = test_val
-                #self.MyPrint_WithoutLogFile("Original input of " + str(test_val) + " not capped at a minimum of " + str(min_val) + " or maximum of " + str(max_val))
+        else:
+            test_val = test_val
 
-            prefix_string = "{:." + str(number_of_decimal_places) + "f}"
-            string_to_set = prefix_string.format(test_val)
-            StringVarObject.set(str(string_to_set))  # Reset the text, overwriting the bad value that was entered.
+        test_val = float(test_val)
 
-            return test_val
-        except:
-            exceptions = sys.exc_info()[0]
-            self.MyPrint_WithoutLogFile("LimitNumber_StringVarObject ERROR: Exceptions: %s" % exceptions)
-            return -1111111111
+        return test_val
+
     ##########################################################################################################
     ##########################################################################################################
-        
+
     ##########################################################################################################
     ##########################################################################################################
     def MyPrint_WithoutLogFile(self, input_string):
@@ -2247,6 +2259,202 @@ class PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class(Frame): #S
                     self.PrintToGui_Label_TextInput_Str = self.PrintToGui_Label_TextInput_Str + "\n"
             ################################
 
+    ##########################################################################################################
+    ##########################################################################################################
+
+    ##########################################################################################################
+    ##########################################################################################################
+    ##########################################################################################################
+    ##########################################################################################################
+    def ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(self, input, number_of_leading_numbers = 4, number_of_decimal_places = 3):
+
+        number_of_decimal_places = max(1, number_of_decimal_places) #Make sure we're above 1
+
+        ListOfStringsToJoin = []
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        if isinstance(input, str) == 1:
+            ListOfStringsToJoin.append(input)
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        elif isinstance(input, int) == 1 or isinstance(input, float) == 1:
+            element = float(input)
+            prefix_string = "{:." + str(number_of_decimal_places) + "f}"
+            element_as_string = prefix_string.format(element)
+
+            ##########################################################################################################
+            ##########################################################################################################
+            if element >= 0:
+                element_as_string = element_as_string.zfill(number_of_leading_numbers + number_of_decimal_places + 1 + 1)  # +1 for sign, +1 for decimal place
+                element_as_string = "+" + element_as_string  # So that our strings always have either + or - signs to maintain the same string length
+            else:
+                element_as_string = element_as_string.zfill(number_of_leading_numbers + number_of_decimal_places + 1 + 1 + 1)  # +1 for sign, +1 for decimal place
+            ##########################################################################################################
+            ##########################################################################################################
+
+            ListOfStringsToJoin.append(element_as_string)
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        elif isinstance(input, list) == 1:
+
+            if len(input) > 0:
+                for element in input: #RECURSION
+                    ListOfStringsToJoin.append(self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(element, number_of_leading_numbers, number_of_decimal_places))
+
+            else: #Situation when we get a list() or []
+                ListOfStringsToJoin.append(str(input))
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        elif isinstance(input, tuple) == 1:
+
+            if len(input) > 0:
+                for element in input: #RECURSION
+                    ListOfStringsToJoin.append("TUPLE" + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(element, number_of_leading_numbers, number_of_decimal_places))
+
+            else: #Situation when we get a list() or []
+                ListOfStringsToJoin.append(str(input))
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        elif isinstance(input, dict) == 1:
+
+            if len(input) > 0:
+                for Key in input: #RECURSION
+                    ListOfStringsToJoin.append(str(Key) + ": " + self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(input[Key], number_of_leading_numbers, number_of_decimal_places))
+
+            else: #Situation when we get a dict()
+                ListOfStringsToJoin.append(str(input))
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        else:
+            ListOfStringsToJoin.append(str(input))
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+        if len(ListOfStringsToJoin) > 1:
+
+            ##########################################################################################################
+            ##########################################################################################################
+
+            ##########################################################################################################
+            StringToReturn = ""
+            for Index, StringToProcess in enumerate(ListOfStringsToJoin):
+
+                ################################################
+                if Index == 0: #The first element
+                    if StringToProcess.find(":") != -1 and StringToProcess[0] != "{": #meaning that we're processing a dict()
+                        StringToReturn = "{"
+                    elif StringToProcess.find("TUPLE") != -1 and StringToProcess[0] != "(":  # meaning that we're processing a tuple
+                        StringToReturn = "("
+                    else:
+                        StringToReturn = "["
+
+                    StringToReturn = StringToReturn + StringToProcess.replace("TUPLE","") + ", "
+                ################################################
+
+                ################################################
+                elif Index < len(ListOfStringsToJoin) - 1: #The middle elements
+                    StringToReturn = StringToReturn + StringToProcess + ", "
+                ################################################
+
+                ################################################
+                else: #The last element
+                    StringToReturn = StringToReturn + StringToProcess
+
+                    if StringToProcess.find(":") != -1 and StringToProcess[-1] != "}":  # meaning that we're processing a dict()
+                        StringToReturn = StringToReturn + "}"
+                    elif StringToProcess.find("TUPLE") != -1 and StringToProcess[-1] != ")":  # meaning that we're processing a tuple
+                        StringToReturn = StringToReturn + ")"
+                    else:
+                        StringToReturn = StringToReturn + "]"
+
+                ################################################
+
+            ##########################################################################################################
+
+            ##########################################################################################################
+            ##########################################################################################################
+
+        elif len(ListOfStringsToJoin) == 1:
+            StringToReturn = ListOfStringsToJoin[0]
+
+        else:
+            StringToReturn = ListOfStringsToJoin
+
+        return StringToReturn
+        ##########################################################################################################
+        ##########################################################################################################
+        ##########################################################################################################
+
+    ##########################################################################################################
+    ##########################################################################################################
+    ##########################################################################################################
+    ##########################################################################################################
+
+    ##########################################################################################################
+    ##########################################################################################################
+    def ConvertDictToProperlyFormattedStringForPrinting(self, DictToPrint, NumberOfDecimalsPlaceToUse = 3, NumberOfEntriesPerLine = 1, NumberOfTabsBetweenItems = 3):
+
+        ProperlyFormattedStringForPrinting = ""
+        ItemsPerLineCounter = 0
+
+        for Key in DictToPrint:
+
+            ##########################################################################################################
+            if isinstance(DictToPrint[Key], dict): #RECURSION
+                ProperlyFormattedStringForPrinting = ProperlyFormattedStringForPrinting + \
+                                                     Key + ":\n" + \
+                                                     self.ConvertDictToProperlyFormattedStringForPrinting(DictToPrint[Key], NumberOfDecimalsPlaceToUse, NumberOfEntriesPerLine, NumberOfTabsBetweenItems)
+
+            else:
+                ProperlyFormattedStringForPrinting = ProperlyFormattedStringForPrinting + \
+                                                     Key + ": " + \
+                                                     self.ConvertFloatToStringWithNumberOfLeadingNumbersAndDecimalPlaces_NumberOrListInput(DictToPrint[Key], 0, NumberOfDecimalsPlaceToUse)
+            ##########################################################################################################
+
+            ##########################################################################################################
+            if ItemsPerLineCounter < NumberOfEntriesPerLine - 1:
+                ProperlyFormattedStringForPrinting = ProperlyFormattedStringForPrinting + "\t"*NumberOfTabsBetweenItems
+                ItemsPerLineCounter = ItemsPerLineCounter + 1
+            else:
+                ProperlyFormattedStringForPrinting = ProperlyFormattedStringForPrinting + "\n"
+                ItemsPerLineCounter = 0
+            ##########################################################################################################
+
+        return ProperlyFormattedStringForPrinting
     ##########################################################################################################
     ##########################################################################################################
 

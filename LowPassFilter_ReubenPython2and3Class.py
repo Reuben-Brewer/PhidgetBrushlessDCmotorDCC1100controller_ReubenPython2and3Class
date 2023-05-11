@@ -6,22 +6,28 @@ reuben.brewer@gmail.com
 www.reubotics.com
 
 Apache 2 License
-Software Revision D, 03/013/2022
+Software Revision H, 05/10/2023
 
-Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit and Raspberry Pi Buster (no Mac testing yet).
+Verified working on: Python 2.7, 3.8 for Windows 8.1, 10 64-bit, Ubuntu 20.04, and Raspberry Pi Buster (no Mac testing yet).
 '''
 
 __author__ = 'reuben.brewer'
 
-import os, sys
-import time, datetime
-import math, cmath, ctypes
+###########################################################
+import os
+import sys
+import time
+import datetime
+import math
+import cmath
+import ctypes
 import collections
 import numpy
 import random
 from random import randint
 import inspect #To enable 'TellWhichFileWereIn'
 import traceback
+###########################################################
 
 class LowPassFilter_ReubenPython2and3Class():
 
@@ -29,49 +35,59 @@ class LowPassFilter_ReubenPython2and3Class():
     ##########################################################################################################
     def __init__(self, setup_dict):
 
-        self.OBJECT_CREATED_SUCCESSFULLY_FLAG = -1
+        print("#################### LowPassFilter_ReubenPython2and3Class __init__ starting. ####################")
 
-        ##########################################
+        #########################################################
+        #########################################################
+        self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 0
+        #########################################################
+        #########################################################
+
+        #########################################################
+        #########################################################
         if "UseMedianFilterFlag" in setup_dict:
             self.UseMedianFilterFlag = self.PassThrough0and1values_ExitProgramOtherwise("UseMedianFilterFlag", setup_dict["UseMedianFilterFlag"])
         else:
             self.UseMedianFilterFlag = 1
 
-        print("UseMedianFilterFlag: " + str(self.UseMedianFilterFlag))
-        ##########################################
+        print("LowPassFilter_ReubenPython2and3Class __init__: UseMedianFilterFlag: " + str(self.UseMedianFilterFlag))
+        #########################################################
+        #########################################################
 
-        ##########################################
+        #########################################################
+        #########################################################
         if "UseExponentialSmoothingFilterFlag" in setup_dict:
             self.UseExponentialSmoothingFilterFlag = self.PassThrough0and1values_ExitProgramOtherwise("UseExponentialSmoothingFilterFlag", setup_dict["UseExponentialSmoothingFilterFlag"])
         else:
             self.UseExponentialSmoothingFilterFlag = 1
 
-        print("UseExponentialSmoothingFilterFlag: " + str(self.UseExponentialSmoothingFilterFlag))
-        ##########################################
+        print("LowPassFilter_ReubenPython2and3Class __init__: UseExponentialSmoothingFilterFlag: " + str(self.UseExponentialSmoothingFilterFlag))
+        #########################################################
+        #########################################################
 
-        ##########################################
+        #########################################################
+        #########################################################
         if "ExponentialSmoothingFilterLambda" in setup_dict:
             self.ExponentialSmoothingFilterLambda = self.PassThroughFloatValuesInRange_ExitProgramOtherwise("ExponentialSmoothingFilterLambda", setup_dict["ExponentialSmoothingFilterLambda"], 0.0, 1.0)
 
         else:
             self.ExponentialSmoothingFilterLambda = 0.005
 
-        print("ExponentialSmoothingFilterLambda: " + str(self.ExponentialSmoothingFilterLambda))
-        ##########################################
-
-        self.CurrentTime_CalculatedFromAddDataPointFromExternalProgram = -11111.0
-        self.LastTime_CalculatedFromAddDataPointFromExternalProgram = -11111.0
-        self.DataStreamingDeltaT_CalculatedFromAddDataPointFromExternalProgram = -11111.0
-        self.DataStreamingFrequency_CalculatedFromAddDataPointFromExternalProgram = -11111.0
+        print("LowPassFilter_ReubenPython2and3Class __init__: ExponentialSmoothingFilterLambda: " + str(self.ExponentialSmoothingFilterLambda))
+        #########################################################
+        #########################################################
 
         self.SignalInRaw = [0.0]*5
         self.SignalOutSmoothed = [0.0]*5
 
-        self.MostRecentDataDict = dict([("SignalInRaw", self.SignalInRaw[0]),
-                                        ("SignalOutSmoothed", self.SignalOutSmoothed[0]),
-                                        ("DataStreamingFrequency", self.DataStreamingFrequency_CalculatedFromAddDataPointFromExternalProgram)])
+        self.MostRecentDataDict = dict()
 
+        #########################################################
+        #########################################################
         self.OBJECT_CREATED_SUCCESSFULLY_FLAG = 1
+        #########################################################
+        #########################################################
+
     ##########################################################################################################
     ##########################################################################################################
 
@@ -79,17 +95,6 @@ class LowPassFilter_ReubenPython2and3Class():
     ##########################################################################################################
     def __del__(self):
         pass
-    ##########################################################################################################
-    ##########################################################################################################
-
-    ##########################################################################################################
-    ##########################################################################################################
-    def IsNumber0or1(self, InputNumber):
-
-        if float(InputNumber) == 0.0 or float(InputNumber) == 1:
-            return 1
-        else:
-            return 0
     ##########################################################################################################
     ##########################################################################################################
 
@@ -159,49 +164,6 @@ class LowPassFilter_ReubenPython2and3Class():
 
     ##########################################################################################################
     ##########################################################################################################
-    def TellWhichFileWereIn(self):
-
-        #We used to use this method, but it gave us the root calling file, not the class calling file
-        #absolute_file_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-        #filename = absolute_file_path[absolute_file_path.rfind("\\") + 1:]
-
-        frame = inspect.stack()[1]
-        filename = frame[1][frame[1].rfind("\\") + 1:]
-        filename = filename.replace(".py","")
-
-        return filename
-    ##########################################################################################################
-    ##########################################################################################################
-
-    ##########################################################################################################
-    ##########################################################################################################
-    def getPreciseSecondsTimeStampString(self):
-        ts = time.time()
-
-        return ts
-    ##########################################################################################################
-    ##########################################################################################################
-
-    ##########################################################################################################
-    ##########################################################################################################
-    def UpdateFrequencyCalculation_CalculatedFromAddDataPointFromExternalProgram(self):
-
-        try:
-            self.DataStreamingDeltaT_CalculatedFromAddDataPointFromExternalProgram = self.CurrentTime_CalculatedFromAddDataPointFromExternalProgram - self.LastTime_CalculatedFromAddDataPointFromExternalProgram
-
-            if self.DataStreamingDeltaT_CalculatedFromAddDataPointFromExternalProgram != 0.0:
-                self.DataStreamingFrequency_CalculatedFromAddDataPointFromExternalProgram = 1.0/self.DataStreamingDeltaT_CalculatedFromAddDataPointFromExternalProgram
-
-            self.LastTime_CalculatedFromAddDataPointFromExternalProgram = self.CurrentTime_CalculatedFromAddDataPointFromExternalProgram
-        except:
-            exceptions = sys.exc_info()[0]
-            print("UpdateFrequencyCalculation_CalculatedFromAddDataPointFromExternalProgram ERROR with Exceptions: %s" % exceptions)
-            traceback.print_exc()
-    ##########################################################################################################
-    ##########################################################################################################
-
-    ##########################################################################################################
-    ##########################################################################################################
     def SwapTwoNumbersBasedOnSize(self, j, k):  # swaps values of j and k if j > k
 
         x = j
@@ -253,10 +215,6 @@ class LowPassFilter_ReubenPython2and3Class():
 
         try:
             ###############################################
-            self.CurrentTime_CalculatedFromAddDataPointFromExternalProgram = self.getPreciseSecondsTimeStampString()
-            ###############################################
-
-            ###############################################
             NewDataPoint = float(NewDataPoint)
 
             self.SignalInRaw = list(numpy.roll(self.SignalInRaw, 1)) #MUST EXPLICITLY MAKE NEW LIST() FOR THIS TO WORK PROPERLY
@@ -280,13 +238,9 @@ class LowPassFilter_ReubenPython2and3Class():
             ###############################################
 
             ###############################################
-            self.UpdateFrequencyCalculation_CalculatedFromAddDataPointFromExternalProgram()
-            ###############################################
-
-            ###############################################
             self.MostRecentDataDict = dict([("SignalInRaw", self.SignalInRaw[0]),
                                            ("SignalOutSmoothed", self.SignalOutSmoothed[0]),
-                                           ("DataStreamingFrequency", self.DataStreamingFrequency_CalculatedFromAddDataPointFromExternalProgram)])
+                                           ("DataStreamingFrequency", -11111.0)]) #For backwards-compatibility, remove this later after we've updated our code.
 
             return self.MostRecentDataDict
             ###############################################
@@ -302,7 +256,8 @@ class LowPassFilter_ReubenPython2and3Class():
     ##########################################################################################################
     def GetMostRecentDataDict(self):
 
-        return self.MostRecentDataDict
+        #deepcopy is not required as MostRecentDataDict only contains numbers (no lists, dicts, etc. that go beyond 1-level).
+        return self.MostRecentDataDict.copy()
     ##########################################################################################################
     ##########################################################################################################
 

@@ -20,7 +20,7 @@ www.reubotics.com
 
 Apache 2 License
 
-Software Revision E, 03/13/2022
+Software Revision F, 05/10/2023
 
 Verified working on: 
 Python 2.7, 3.8
@@ -33,6 +33,11 @@ Raspberry Pi Buster
 ########################  
 
 ########################### Python module installation instructions, all OS's
+
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies: ['future.builtins', 'LowPassFilter_ReubenPython2and3Class', 'Phidget22']
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies_TestProgram: ['MyPrint_ReubenPython2and3Class']
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies_NestedLayers: ['future.builtins', 'numpy']
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies_All:['future.builtins', 'LowPassFilter_ReubenPython2and3Class', 'MyPrint_ReubenPython2and3Class', 'numpy', 'Phidget22']
 
 https://pypi.org/project/Phidget22/#files
 
