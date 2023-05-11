@@ -2,10 +2,10 @@
 
 PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class
 
-Wrapper (including ability to hook to Tkinter GUI) to control 1 brushless/BLDC motor with Hall Effect sensors (via VINT). 
-Supports both velocity and position control modes.
+Wrapper (including ability to hook to Tkinter GUI) to control 1 brushless/BLDC motor with Hall Effect sensors (via VINT). Supports both velocity and position control modes.
 
 From Phidgets' website:
+
 "The DCC1100 requires an 8-30V DC power supply and can control one brushless DC motor. The motor must have hall-effect feedback for this controller to function. The DCC1100 has a 5-pin Molex connector to interface with the motor's hall-effect output. This Phidget connects to your computer through a VINT Hub."
 
 Brushless DC Motor Phidget
@@ -22,7 +22,7 @@ www.reubotics.com
 
 Apache 2 License
 
-Software Revision E, 03/13/2022
+Software Revision F, 05/10/2023
 
 Verified working on: 
 
@@ -39,6 +39,14 @@ Raspberry Pi Buster
 ########################  
 
 ########################### Python module installation instructions, all OS's
+
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies: ['future.builtins', 'LowPassFilter_ReubenPython2and3Class', 'Phidget22']
+
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies_TestProgram: ['MyPrint_ReubenPython2and3Class']
+
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies_NestedLayers: ['future.builtins', 'numpy']
+
+PhidgetBrushlessDCmotorDCC1100controller_ReubenPython2and3Class, ListOfModuleDependencies_All:['future.builtins', 'LowPassFilter_ReubenPython2and3Class', 'MyPrint_ReubenPython2and3Class', 'numpy', 'Phidget22']
 
 https://pypi.org/project/Phidget22/#files
 
